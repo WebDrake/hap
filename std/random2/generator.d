@@ -1,6 +1,7 @@
 module std.random2.generator;
 
-import std.conv, std.range, std.traits, std.typetuple, core.thread;
+import std.algorithm, std.conv, std.exception, std.range, std.traits, std.typetuple, core.thread;
+import std.string : format;
 
 unittest
 {
@@ -96,7 +97,7 @@ if (isUnsigned!UIntType)
         seed(value);
     }
 
-    void seed()(in UIntType value)
+    void seed()(in UIntType value) @safe nothrow pure
     {
         enum UIntType mask = this.max;
         mt[0] = value & mask;
@@ -107,11 +108,22 @@ if (isUnsigned!UIntType)
         popFront();
     }
 
-    deprecated("Not implemented yet.")
     void seed(Range)(Range range)
     if (isInputRange!Range && is(Unqual!(ElementType!Range) == UIntType))
     {
-        // stuff
+        size_t j;
+        for (j = 0; j < n && !range.empty; ++j, range.popFront())
+        {
+            mt[j] = range.front;
+        }
+
+        mti = n;
+        if (range.empty && j < n)
+        {
+            throw new Exception(format("%s.seed: Input range only provided %s elements, "
+                                       "need at least %s.", typeof(this).stringof, j, n));
+        }
+
         popFront();
     }
 
@@ -217,4 +229,21 @@ unittest
     auto gen = new Mt19937;
     popFrontN(gen, 9999);
     assert(gen.front == 4123659995);
+}
+
+unittest
+{
+    foreach (MtGen; TypeTuple!(Mt11213b, Mt19937, Mt19937_64))
+    {
+        auto gen = new MtGen;
+
+        // range too small to seed the generator
+        assertThrown(gen.seed(repeat(0, gen.stateSize - 1).map!((a) => to!(typeof(gen.front))(a + 1))));
+
+        // range the absolute minimum size necessary
+        gen.seed(repeat(0, gen.stateSize).map!((a) => to!(typeof(gen.front))(a + 1)));
+
+        // infinite range
+        gen.seed(repeat(0).map!((a) => to!(typeof(gen.front))(a + 1)));
+    }
 }
