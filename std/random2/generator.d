@@ -12,6 +12,21 @@ unittest
 /// Tuple of all uniform RNGs defined in this module.
 alias UniformRNGTypes = TypeTuple!(Mt11213b, Mt19937, Mt19937_64);
 
+/// Default RNG type recommended for general use.
+alias Random = Mt19937;
+
+deprecated("Not yet implemented properly, use with caution.")
+auto rndGen() @property
+{
+    auto gen = new Random(unpredictableSeed);
+    return gen;
+}
+
+unittest
+{
+    assert(isUniformRNG!(typeof(rndGen)));
+}
+
 // General unittests that all uniform RNGs should pass
 unittest
 {
@@ -419,4 +434,12 @@ unittest
         // infinite range
         gen.seed(repeat(0).map!((a) => (a + 1)));
     }
+}
+
+deprecated("Not implemented properly, just a stopgap.")
+uint unpredictableSeed() @property
+{
+    uint threadID = cast(uint) cast(void*) Thread.getThis();
+    uint seed = cast(uint) TickDuration.currSystemTick.length ^ threadID;
+    return seed;
 }
