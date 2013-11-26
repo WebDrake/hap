@@ -109,7 +109,7 @@ if (isUnsigned!UIntType)
     }
 
     void seed(Range)(Range range)
-    if (isInputRange!Range && is(Unqual!(ElementType!Range) == UIntType))
+    if (isInputRange!Range && is(Unqual!(ElementType!Range) : UIntType))
     {
         size_t j;
         for (j = 0; j < n && !range.empty; ++j, range.popFront())
@@ -238,12 +238,12 @@ unittest
         auto gen = new MtGen;
 
         // range too small to seed the generator
-        assertThrown(gen.seed(repeat(0, gen.stateSize - 1).map!((a) => to!(typeof(gen.front))(a + 1))));
+        assertThrown(gen.seed(repeat(0, gen.stateSize - 1).map!((a) => (a + 1))));
 
         // range the absolute minimum size necessary
-        gen.seed(repeat(0, gen.stateSize).map!((a) => to!(typeof(gen.front))(a + 1)));
+        gen.seed(repeat(0, gen.stateSize).map!((a) => (a + 1)));
 
         // infinite range
-        gen.seed(repeat(0).map!((a) => to!(typeof(gen.front))(a + 1)));
+        gen.seed(repeat(0).map!((a) => (a + 1)));
     }
 }
