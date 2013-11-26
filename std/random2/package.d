@@ -1,5 +1,6 @@
 module std.random2;
 
+public import std.random2.distribution;
 public import std.random2.generator;
 
 unittest
