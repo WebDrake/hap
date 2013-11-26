@@ -349,9 +349,17 @@ alias Mt19937_64 =
 
 unittest
 {
-    auto gen = new Mt19937;
-    popFrontN(gen, 9999);
-    assert(gen.front == 4123659995);
+    auto gen11213b = new Mt11213b;
+    gen11213b.popFrontN(9999);
+    assert(gen11213b.front == 3809585648U);
+
+    auto gen19937 = new Mt19937;
+    gen19937.popFrontN(9999);
+    assert(gen19937.front == 4123659995U);
+
+    auto gen19937_64 = new Mt19937_64;
+    gen19937_64.popFrontN(9999);
+    assert(gen19937_64.front == 9981545732273789042UL);
 }
 
 unittest
