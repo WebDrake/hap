@@ -43,9 +43,17 @@ unittest
         {
             auto gen1 = new RandomGen/*(unpredictableSeed)*/;
             auto gen2 = gen1.save;
-            //assert(gen1 == gen2);
+            assert(gen1 == gen2);
             assert(gen1 !is gen2);
             assert(gen1.take(100).array() == gen2.take(100).array());
+            auto gen3 = gen1;
+            gen1.popFrontN(9999);
+            assert(gen3 == gen1);
+            assert(gen3 is gen1);
+            assert(gen3.front == gen1.front);
+            assert(gen2 != gen1);
+            assert(gen2 !is gen1);
+            assert(gen2.front != gen1.front);
         }
     }
 }
@@ -341,6 +349,19 @@ if (isUnsigned!UIntType)
         ret._y = this._y;
         ret.mti = this.mti;
         return ret;
+    }
+
+    override bool opEquals(Object rhs) @safe const nothrow pure
+    {
+        auto that = cast(typeof(this)) rhs;
+        if (this.mt != that.mt || this._y != that._y || this.mti != that.mti)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
 }
 
