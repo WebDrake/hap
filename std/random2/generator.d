@@ -1,6 +1,49 @@
 module std.random2.generator;
 
-import std.conv, std.range, std.traits, core.thread;
+import std.conv, std.range, std.traits, std.typetuple, core.thread;
+
+unittest
+{
+    import std.stdio;
+    writeln("std.random2.generator has been imported.");
+}
+
+/// Tuple of all uniform RNGs defined in this module.
+alias UniformRNGTypes = TypeTuple!(Mt11213b, Mt19937, Mt19937_64);
+
+// General unittests that all uniform RNGs should pass
+unittest
+{
+    foreach (RandomGen; UniformRNGTypes)
+    {
+        /* All uniform RNGs should be forward ranges and should
+         * satisfy the requirements of the $(D isUniformRNG)
+         * template.
+         */
+        assert(isInputRange!RandomGen);
+        //assert(isForwardRange!RandomGen);
+        //assert(isUniformRNG!RandomGen);
+
+        import std.stdio;
+        writeln(RandomGen.stringof);
+        writeln("\tType: ", typeof(RandomGen.front).stringof);
+        writeln("\tmin = ", RandomGen.min);
+        writeln("\tmax = ", RandomGen.max);
+
+        // Ensure that popFront() actually changes the RNG state
+        typeof(RandomGen.front) a, b;
+        {
+            auto gen = new RandomGen;
+            a = gen.front;
+        }
+        {
+            auto gen = new RandomGen;
+            gen.popFront();
+            b = gen.front;
+        }
+        assert(a != b);
+    }
+}
 
 class MersenneTwisterEngine(UIntType,
                             size_t w, size_t n, size_t m, size_t r,
@@ -171,21 +214,7 @@ alias Mt19937_64 =
 
 unittest
 {
-    import std.stdio, std.typetuple;
-    writeln("std.random2.generator has been imported.");
-
-    foreach (Twister; TypeTuple!(Mt11213b, Mt19937, Mt19937_64))
-    {
-        assert(isInputRange!Twister);
-        writeln();
-        writeln(Twister.stringof);
-        writeln("\tmin = ", Twister.min);
-        writeln("\tmax = ", Twister.max);
-        writeln("\tdefault seed = ", Twister.defaultSeed);
-    }
-
     auto gen = new Mt19937;
     popFrontN(gen, 9999);
     assert(gen.front == 4123659995);
-    writeln("After 9999 pops, the front of a default-seeded Mt19937 is ", gen.front);
 }
