@@ -38,6 +38,15 @@ unittest
             b = gen.front;
         }
         assert(a != b);
+
+        static if (isForwardRange!RandomGen)
+        {
+            auto gen1 = new RandomGen/*(unpredictableSeed)*/;
+            auto gen2 = gen1.save;
+            //assert(gen1 == gen2);
+            assert(gen1 !is gen2);
+            assert(gen1.take(100).array() == gen2.take(100).array());
+        }
     }
 }
 
@@ -324,6 +333,15 @@ if (isUnsigned!UIntType)
 
         _y = y;
     }
+
+    typeof(this) save() @property
+    {
+        auto ret = new typeof(this);
+        ret.mt[] = this.mt[];
+        ret._y = this._y;
+        ret.mti = this.mti;
+        return ret;
+    }
 }
 
 alias Mt11213b =
@@ -367,6 +385,7 @@ unittest
     foreach (MtGen; TypeTuple!(Mt11213b, Mt19937, Mt19937_64))
     {
         assert(isSeedable!(MtGen, typeof(MtGen.front)));
+        assert(isForwardRange!MtGen);
 
         auto gen = new MtGen;
 
