@@ -369,7 +369,7 @@ if (isUnsigned!UIntType)
     override bool opEquals(Object rhs) @safe const nothrow pure
     {
         auto that = cast(typeof(this)) rhs;
-        if (this.mt != that.mt || this._y != that._y || this.mti != that.mti)
+        if (that is null || this.mt != that.mt || this._y != that._y || this.mti != that.mti)
         {
             return false;
         }
