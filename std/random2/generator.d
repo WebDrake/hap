@@ -16,10 +16,29 @@ alias UniformRNGTypes = TypeTuple!(Mt11213b, Mt19937, Mt19937_64);
 alias Random = Mt19937;
 
 deprecated("Not yet implemented properly, use with caution.")
-auto rndGen() @property
+ref Random rndGen() @property
 {
-    auto gen = new Random(unpredictableSeed);
-    return gen;
+    struct RndGen
+    {
+        Random gen = new Random();
+    }
+
+    static RndGen result;
+    static bool initialized;
+
+    if (!initialized)
+    {
+        static if (isSeedable!(Random, typeof(repeat(0).map!((a) => unpredictableSeed))))
+        {
+            result.gen.seed(repeat(0).map!((a) => unpredictableSeed));
+        }
+        else
+        {
+            result.gen.seed(unpredictableSeed);
+        }
+    }
+
+    return result.gen;
 }
 
 unittest
