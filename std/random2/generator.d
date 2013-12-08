@@ -10,7 +10,7 @@ unittest
 }
 
 /// Tuple of all uniform RNGs defined in this module.
-alias UniformRNGTypes = TypeTuple!(Mt11213b, Mt19937, Mt19937_64);
+alias UniformRNGTypes = TypeTuple!(MinstdRand0, MinstdRand, Mt11213b, Mt19937, Mt19937_64);
 
 /// Default RNG type recommended for general use.
 alias Random = Mt19937;
@@ -218,6 +218,229 @@ unittest
     static assert(isUniformRNG!(seedRng));
     static assert(isSeedable!(seedRng, uint));
     static assert(isSeedable!(seedRng));
+}
+
+final class LinearCongruentialEngine(UIntType,
+                                     UIntType a, UIntType c, UIntType m)
+if (isUnsigned!UIntType && isIntegral!UIntType)
+{
+  private:
+    UIntType _x = m ? (a + c) % m : (a + c);
+
+    static ulong primeFactorsOnly(ulong n) @safe nothrow pure
+    {
+        ulong result = 1;
+        ulong iter = 2;
+        for(; n >= iter * iter; iter += 2 - (iter == 2))
+        {
+            if (n % iter) continue;
+            result *= iter;
+            do
+            {
+                n /= iter;
+            }
+            while (n % iter == 0);
+        }
+        return result * n;
+    }
+
+    unittest
+    {
+        static assert(primeFactorsOnly(100) == 10);
+        static assert(primeFactorsOnly(11) == 11);
+        static assert(primeFactorsOnly(7 * 7 * 7 * 11 * 15 * 11) == 3 * 5 * 7 * 11);
+        static assert(primeFactorsOnly(129 * 2) == 129 * 2);
+    }
+
+    static bool properParameters(ulong m, ulong a, ulong c) @safe nothrow pure
+    {
+        if (m == 0)
+        {
+            static if (is(UIntType == uint))
+            {
+                // assume m is uint.max + 1
+                m = 1uL << 32;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        import std.numeric : gcd;
+
+        // Bounds checking
+        if (a == 0 || a >= m || c >= m) return false;
+        // c and m are relatively prime
+        if (c > 0 && gcd(c, m) != 1) return false;
+        // a - 1 is divisible by all prime factors of m
+        if ((a - 1) % primeFactorsOnly(m)) return false;
+        // if a - 1 is a multiple of 4, then m is a multiple of 4 too
+        if ((a - 1) % 4 == 0 && m % 4) return false;
+
+        // Passed all tests
+        return true;
+    }
+
+    static assert(c == 0 || properParameters(m, a, c), format("Incorrect instantiation of ", typeof(this).stringof));
+
+  public:
+    enum bool isUniformRandom = true;
+    enum UIntType min = (c == 0 ? 1 : 0);
+    enum UIntType max = m - 1;
+
+    enum UIntType multiplier = a;
+    enum UIntType increment = c;
+    enum UIntType modulus = m;
+
+    static assert(m == 0 || a < m);
+    static assert(m == 0 || c < m);
+    static assert(m == 0 || (cast(ulong) a * (m - 1) + c) % m == (c < a ? c - a + m : c - a));
+
+    this()
+    {
+        // Default seed already set to m ? (a + c) % m : (a + c)
+    }
+
+    this(in UIntType x0)
+    {
+        seed(x0);
+    }
+
+    void seed(in UIntType x0 = 1) @safe pure
+    {
+        static if (c == 0)
+        {
+            enforce(x0, format("Invalid (zero) seed for ", typeof(this).stringof));
+        }
+        _x = m ? (x0 % m) : x0;
+        popFront();
+    }
+
+    // ----- Range primitives -------------------------------------------------
+
+    /// Always $(D false) (random generators are infinite ranges).
+    enum bool empty = false;
+
+    /// Returns the current pseudo-random value.
+    UIntType front() @property @safe const nothrow pure
+    {
+        return _x;
+    }
+
+    void popFront() @safe nothrow pure
+    {
+        static if (m)
+        {
+            static if (is(UInttype == uint) && m == uint.max)
+            {
+                immutable ulong x = (cast(ulong) a * _x + c),
+                                v = x >> 32,
+                                w = x & uint.max;
+                immutable y = cast(uint)(v + w);
+                _x = (y < v || y = uint.max) ? (y + 1) : y;
+            }
+            else static if (is(UIntType == uint) && m == int.max)
+            {
+                immutable ulong x = (cast(ulong) a * _x + c),
+                                v = x >> 31,
+                                w = x & int.max;
+                immutable uint y = cast(uint)(v + w);
+                _x = (y >= int.max) ? (y - int.max) : y;
+            }
+            else
+            {
+                _x = cast(UIntType) ((cast(ulong) a * _x + c) % m);
+            }
+        }
+        else
+        {
+            _x = a * _x + c;
+        }
+    }
+
+    typeof(this) save() @property
+    {
+        auto ret = new typeof(this);
+        ret._x = this._x;
+        return ret;
+    }
+
+    override bool opEquals(Object rhs) //@safe const nothrow pure
+    {
+        auto that = cast(typeof(this)) rhs;
+
+        if (that is null)
+        {
+            return false;
+        }
+        else if (this._x != that._x)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+}
+
+alias MinstdRand0 = LinearCongruentialEngine!(uint, 16807, 0, 2147483647);
+alias MinstdRand = LinearCongruentialEngine!(uint, 48271, 0, 2147483647);
+
+unittest
+{
+    foreach (LCGen; TypeTuple!(MinstdRand0, MinstdRand))
+    {
+        assert(isUniformRNG!(LCGen, uint));
+        assert(isSeedable!(LCGen, uint));
+        assert(isForwardRange!LCGen);
+    }
+
+    // The correct numbers are taken from The Database of Integer Sequences
+    // http://www.research.att.com/~njas/sequences/eisBTfry00128.txt
+    auto checking0 = [
+        16807UL,282475249,1622650073,984943658,1144108930,470211272,
+        101027544,1457850878,1458777923,2007237709,823564440,1115438165,
+        1784484492,74243042,114807987,1137522503,1441282327,16531729,
+        823378840,143542612 ];
+    auto gen0 = new MinstdRand0;
+
+    foreach (e; checking0)
+    {
+        assert(gen0.front == e);
+        gen0.popFront();
+    }
+    // Test the 10000th invocation
+    // Correct value taken from:
+    // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2461.pdf
+    gen0.seed();
+    popFrontN(gen0, 9999);
+    assert(gen0.front == 1043618065);
+
+    // Test MinstdRand
+    auto checking = [48271UL,182605794,1291394886,1914720637,2078669041, 407355683];
+    auto gen = new MinstdRand;
+
+    foreach (e; checking)
+    {
+        assert(gen.front == e);
+        gen.popFront();
+    }
+
+    // Test the 10000th invocation
+    // Correct value taken from:
+    // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2461.pdf
+    gen.seed();
+    popFrontN(gen, 9999);
+    assert(gen.front == 399268537);
+
+    // Check we don't get equality if 2 LC generators of different type are compared.
+    gen._x = 1;
+    gen0._x = 1;
+    assert(gen._x == gen0._x);
+    assert(gen !is gen0);
+    assert(gen != gen0);
 }
 
 final class MersenneTwisterEngine(UIntType,
