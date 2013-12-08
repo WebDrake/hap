@@ -15,7 +15,6 @@ alias UniformRNGTypes = TypeTuple!(MinstdRand0, MinstdRand, Mt11213b, Mt19937, M
 /// Default RNG type recommended for general use.
 alias Random = Mt19937;
 
-deprecated("Not yet implemented properly, use with caution.")
 ref Random rndGen() @property
 {
     struct RndGen
@@ -36,6 +35,8 @@ ref Random rndGen() @property
         {
             result.gen.seed(unpredictableSeed);
         }
+
+        initialized = true;
     }
 
     return result.gen;
@@ -44,6 +45,8 @@ ref Random rndGen() @property
 unittest
 {
     assert(isUniformRNG!(typeof(rndGen)));
+    auto a = rndGen;
+    assert(a.front == rndGen.front);
 }
 
 // General unittests that all uniform RNGs should pass
