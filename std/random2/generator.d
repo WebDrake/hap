@@ -56,7 +56,7 @@ unittest
 
         static if (isForwardRange!RandomGen)
         {
-            auto gen1 = new RandomGen/*(unpredictableSeed)*/;
+            auto gen1 = new RandomGen(unpredictableSeed);
             auto gen2 = gen1.save;
             assert(gen1 == gen2);
             assert(gen1 !is gen2);
