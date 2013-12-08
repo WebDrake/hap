@@ -24,13 +24,11 @@ auto a = uniform(0, 1024, gen);
 auto a = uniform(0.0f, 1.0f, gen);
 ----
  */
-deprecated("Need to temporarily declare an internal variable until rndGen is properly implemented.")
 auto uniform(string boundaries = "[)", T1, T2)
             (T1 a, T2 b)
 if (!is(CommonType!(T1, T2) == void))
 {
-    auto gen = rndGen;
-    return uniform!(boundaries, T1, T2, Random)(a, b, gen);
+    return uniform!(boundaries, T1, T2, Random)(a, b, rndGen);
 }
 
 unittest
@@ -197,12 +195,10 @@ if (!is(T == enum) && (isIntegral!T || isSomeChar!T) && isUniformRNG!UniformRNG)
 }
 
 /// Ditto
-deprecated("Have to temporarily declare an internal variable until rndGen is properly implemented.")
 auto uniform(T)()
 if (!is(T == enum) && (isIntegral!T || isSomeChar!T))
 {
-    auto gen = rndGen;
-    return uniform!T(gen);
+    return uniform!T(rndGen);
 }
 
 unittest
