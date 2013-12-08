@@ -24,11 +24,13 @@ auto a = uniform(0, 1024, gen);
 auto a = uniform(0.0f, 1.0f, gen);
 ----
  */
+deprecated("Need to temporarily declare an internal variable until rndGen is properly implemented.")
 auto uniform(string boundaries = "[)", T1, T2)
             (T1 a, T2 b)
 if (!is(CommonType!(T1, T2) == void))
 {
-    return uniform!(boundaries, T1, T2, Random)(a, b, rndGen);
+    auto gen = rndGen;
+    return uniform!(boundaries, T1, T2, Random)(a, b, gen);
 }
 
 unittest
@@ -157,23 +159,17 @@ unittest
     assert(0 <= a && a <= 1024);
     auto b = uniform(0.0f, 1.0f, gen);
     assert(0 <= b && b < 1, to!string(b));
-    version(none)
-    {
-        auto c = uniform(0.0, 1.0);
-        assert(0 <= c && c < 1);
-    }
+    auto c = uniform(0.0, 1.0);
+    assert(0 <= c && c < 1);
 
-    version(none)
+    foreach(T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
+                          int, uint, long, ulong, float, double, real))
     {
-        foreach(T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
-                              int, uint, long, ulong, float, double, real))
-        {
-            T lo = 0, hi = 100;
-            T init = uniform(lo, hi);
-            size_t i = 50;
-            while (--i && uniform(lo, hi) == init) {}
-            assert(i > 0);
-        }
+        T lo = 0, hi = 100;
+        T init = uniform(lo, hi);
+        size_t i = 50;
+        while (--i && uniform(lo, hi) == init) {}
+        assert(i > 0);
     }
 }
 
@@ -201,23 +197,23 @@ if (!is(T == enum) && (isIntegral!T || isSomeChar!T) && isUniformRNG!UniformRNG)
 }
 
 /// Ditto
+deprecated("Have to temporarily declare an internal variable until rndGen is properly implemented.")
 auto uniform(T)()
 if (!is(T == enum) && (isIntegral!T || isSomeChar!T))
 {
-    return uniform!(T, Random)(rndGen);
+    auto gen = rndGen;
+    return uniform!T(gen);
 }
 
 unittest
 {
-    version(none)
+    foreach(T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
+                          int, uint, long, ulong))
     {
-        foreach(T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
-                              int, uint, long, ulong))
-        {
-            T init = uniform!T();
-            size_t i = 50;
-            while (--i && uniform!T() == init) {}
-            assert(i > 0);
-        }
+        T init = uniform!T();
+        size_t i = 50;
+        while (--i && uniform!T() == init) {}
+        assert(i > 0);
+        assert(i < 50);
     }
 }
