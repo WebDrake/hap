@@ -65,7 +65,7 @@ unittest
 /// ditto
 auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
             (T1 a, T2 b, ref UniformRNG urng)
-if (isFloatingPoint!(CommonType!(T1, T2)))
+if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
 {
     alias Unqual!(CommonType!(T1, T2)) NumberType;
     static if (boundaries[0] == '(')
@@ -97,7 +97,8 @@ if (isFloatingPoint!(CommonType!(T1, T2)))
 // Implementation of uniform for integral types
 auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
             (T1 a, T2 b, ref UniformRNG urng)
-if (isIntegral!(CommonType!(T1, T2)) || isSomeChar!(CommonType!(T1, T2)))
+if ((isIntegral!(CommonType!(T1, T2)) || isSomeChar!(CommonType!(T1, T2)))
+    && isUniformRNG!UniformRNG)
 {
     alias Unqual!(CommonType!(T1, T2)) ResultType;
     // We handle the case "[)' as the common case, and we adjust all
@@ -181,9 +182,8 @@ Generates a uniformly-distributed number in the range $(D [T.min,
 T.max]) for any integral type $(D T). If no random number generator is
 passed, uses the default $(D rndGen).
  */
-auto uniform(T, UniformRandomNumberGenerator)
-            (ref UniformRandomNumberGenerator urng)
-if (!is(T == enum) && (isIntegral!T || isSomeChar!T))
+auto uniform(T, UniformRNG)(ref UniformRNG urng)
+if (!is(T == enum) && (isIntegral!T || isSomeChar!T) && isUniformRNG!UniformRNG)
 {
     auto r = urng.front;
     urng.popFront();
@@ -204,7 +204,7 @@ if (!is(T == enum) && (isIntegral!T || isSomeChar!T))
 auto uniform(T)()
 if (!is(T == enum) && (isIntegral!T || isSomeChar!T))
 {
-    return uniform!T(rndGen);
+    return uniform!(T, Random)(rndGen);
 }
 
 unittest
