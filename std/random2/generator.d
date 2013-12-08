@@ -682,10 +682,27 @@ unittest
     }
 }
 
-deprecated("Not implemented properly, just a stopgap.")
 uint unpredictableSeed() @property
 {
-    uint threadID = cast(uint) cast(void*) Thread.getThis();
-    uint seed = cast(uint) TickDuration.currSystemTick.length ^ threadID;
-    return seed;
+    struct RandGen
+    {
+        MinstdRand0 gen = new MinstdRand0;
+    }
+
+    static RandGen rand;
+    static bool seeded;
+
+    if (!seeded)
+    {
+        uint threadID = cast(uint) cast(void*) Thread.getThis();
+        rand.gen.seed((getpid() + threadID) ^ cast(uint) TickDuration.currSystemTick.length);
+        seeded = true;
+    }
+    return cast(uint) TickDuration.currSystemTick.length ^ rand.gen.front;
+}
+
+unittest
+{
+    auto a = unpredictableSeed;
+    assert(is(typeof(a) == uint));
 }
