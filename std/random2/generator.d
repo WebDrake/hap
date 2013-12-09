@@ -225,7 +225,7 @@ unittest
 
 final class LinearCongruentialEngine(UIntType,
                                      UIntType a, UIntType c, UIntType m)
-if (isUnsigned!UIntType && isIntegral!UIntType)
+    if (isUnsigned!UIntType && isIntegral!UIntType)
 {
   private:
     UIntType _x = m ? (a + c) % m : (a + c);
@@ -451,7 +451,7 @@ final class MersenneTwisterEngine(UIntType,
                                   UIntType a, size_t u, UIntType d, size_t s,
                                   UIntType b, size_t t,
                                   UIntType c, size_t l, UIntType f)
-if (isUnsigned!UIntType)
+    if (isUnsigned!UIntType)
 {
   private:
     UIntType[n] mt;

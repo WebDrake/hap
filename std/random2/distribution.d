@@ -26,7 +26,7 @@ auto a = uniform(0.0f, 1.0f, gen);
  */
 auto uniform(string boundaries = "[)", T1, T2)
             (T1 a, T2 b)
-if (!is(CommonType!(T1, T2) == void))
+    if (!is(CommonType!(T1, T2) == void))
 {
     return uniform!(boundaries, T1, T2, Random)(a, b, rndGen);
 }
@@ -65,7 +65,7 @@ unittest
 /// ditto
 auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
             (T1 a, T2 b, ref UniformRNG urng)
-if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
+    if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
 {
     alias Unqual!(CommonType!(T1, T2)) NumberType;
     static if (boundaries[0] == '(')
@@ -97,8 +97,8 @@ if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
 // Implementation of uniform for integral types
 auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
             (T1 a, T2 b, ref UniformRNG urng)
-if ((isIntegral!(CommonType!(T1, T2)) || isSomeChar!(CommonType!(T1, T2)))
-    && isUniformRNG!UniformRNG)
+    if ((isIntegral!(CommonType!(T1, T2)) || isSomeChar!(CommonType!(T1, T2)))
+        && isUniformRNG!UniformRNG)
 {
     alias Unqual!(CommonType!(T1, T2)) ResultType;
     // We handle the case "[)' as the common case, and we adjust all
@@ -177,7 +177,8 @@ T.max]) for any integral type $(D T). If no random number generator is
 passed, uses the default $(D rndGen).
  */
 auto uniform(T, UniformRNG)(ref UniformRNG urng)
-if (!is(T == enum) && (isIntegral!T || isSomeChar!T) && isUniformRNG!UniformRNG)
+    if (!is(T == enum) && (isIntegral!T || isSomeChar!T)
+        && isUniformRNG!UniformRNG)
 {
     auto r = urng.front;
     urng.popFront();
@@ -196,7 +197,7 @@ if (!is(T == enum) && (isIntegral!T || isSomeChar!T) && isUniformRNG!UniformRNG)
 
 /// Ditto
 auto uniform(T)()
-if (!is(T == enum) && (isIntegral!T || isSomeChar!T))
+    if (!is(T == enum) && (isIntegral!T || isSomeChar!T))
 {
     return uniform!T(rndGen);
 }
