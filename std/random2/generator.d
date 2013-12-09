@@ -314,7 +314,7 @@ final class LinearCongruentialEngine(UIntType,
     {
         static if (c == 0)
         {
-            enforce(x0, format("Invalid (zero) seed for ", typeof(this).stringof));
+            enforce(x0, format("Invalid (zero) seed for %s", typeof(this).stringof));
         }
         _x = m ? (x0 % m) : x0;
         popFront();
