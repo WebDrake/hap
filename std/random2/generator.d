@@ -369,7 +369,7 @@ final class LinearCongruentialEngine(UIntType,
         return ret;
     }
 
-    override bool opEquals(Object rhs) //@safe const nothrow pure
+    override bool opEquals(Object rhs) @safe const nothrow pure
     {
         auto that = cast(typeof(this)) rhs;
 
