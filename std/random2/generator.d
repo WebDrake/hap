@@ -687,21 +687,16 @@ unittest
 
 uint unpredictableSeed() @property
 {
-    struct RandGen
-    {
-        MinstdRand0 gen = new MinstdRand0;
-    }
+    static MinstdRand0 rand = null;
 
-    static RandGen rand;
-    static bool seeded;
-
-    if (!seeded)
+    if (rand is null)
     {
+        rand = new MinstdRand0;
         uint threadID = cast(uint) cast(void*) Thread.getThis();
-        rand.gen.seed((getpid() + threadID) ^ cast(uint) TickDuration.currSystemTick.length);
-        seeded = true;
+        rand.seed((getpid() + threadID) ^ cast(uint) TickDuration.currSystemTick.length);
     }
-    return cast(uint) TickDuration.currSystemTick.length ^ rand.gen.front;
+    rand.popFront();
+    return cast(uint) TickDuration.currSystemTick.length ^ rand.front;
 }
 
 unittest
