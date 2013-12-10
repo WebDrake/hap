@@ -17,29 +17,23 @@ alias Random = Mt19937;
 
 ref Random rndGen() @property
 {
-    struct RndGen
-    {
-        Random gen = new Random();
-    }
+    static Random result = null;
 
-    static RndGen result;
-    static bool initialized;
-
-    if (!initialized)
+    if (result is null)
     {
+        result = new Random;
+
         static if (isSeedable!(Random, typeof(repeat(0).map!((a) => unpredictableSeed))))
         {
-            result.gen.seed(repeat(0).map!((a) => unpredictableSeed));
+            result.seed(repeat(0).map!((a) => unpredictableSeed));
         }
         else
         {
-            result.gen.seed(unpredictableSeed);
+            result.seed(unpredictableSeed);
         }
-
-        initialized = true;
     }
 
-    return result.gen;
+    return result;
 }
 
 unittest
