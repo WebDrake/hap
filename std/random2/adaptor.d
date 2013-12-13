@@ -2,12 +2,204 @@ module std.random2.adaptor;
 
 import std.random2.distribution, std.random2.generator;
 
-import std.exception, std.math, std.range;
+import std.algorithm, std.exception, std.math, std.range;
 
 unittest
 {
     import std.stdio;
     writeln("std.random2.adaptor has been imported.");
+}
+
+// RandomCover
+/**
+ * Covers a given range $(D r) in a random manner, i.e. goes through each
+ * element of $(D r) once and only once, but in a random order.  $(D r)
+ * must be a random-access range with length.
+ *
+ * If no random number generator is passed to $(D randomCover), the
+ * thread-global RNG rndGen will be used.
+ *
+ * Example:
+ * ----
+ * int[] a = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
+ * foreach (e; randomCover(a))
+ * {
+ *     writeln(e);
+ * }
+ *
+ * // using a specified random number generator
+ * auto gen = new Random(unpredictableSeed);
+ * foreach (e; randomCover(a, gen))
+ * {
+ *     writeln(e);
+ * }
+ * ----
+ */
+final class RandomCover(Range, RandomGen)
+    if (isRandomAccessRange!Range && isUniformRNG!RandomGen)
+{
+  private:
+    bool[] _chosen;
+    size_t _current;
+    size_t _alreadyChosen;
+    Range _input;
+    RandomGen _rng;
+
+    // private constructor for use by .save
+    this(Range input, RandomGen rng, in bool[] chosen, in size_t current, in size_t already)
+    {
+        _input = input;
+        _rng = rng;
+        _chosen.length = chosen.length;
+        _chosen[] = chosen[];
+        _current = current;
+        assert(_chosen[_current]);
+        _alreadyChosen = already;
+        assert(_alreadyChosen > 0);
+    }
+
+  public:
+    this(Range input, RandomGen rng)
+    {
+        _input = input;
+        _rng = rng;
+        _chosen.length = _input.length;
+        _alreadyChosen = 0;
+        popFront();
+    }
+
+    /// Range primitives.
+    bool empty() @property @safe const nothrow pure
+    {
+        return _alreadyChosen > _input.length;
+    }
+
+    /// ditto
+    auto ref front() @property @safe const nothrow pure
+    in
+    {
+        assert(_alreadyChosen > 0);
+    }
+    body
+    {
+        return _input[_current];
+    }
+
+    /// ditto
+    void popFront()
+    {
+        if (_alreadyChosen >= _input.length)
+        {
+            // No more elements
+            ++_alreadyChosen; // means we're done
+            return;
+        }
+
+        size_t k = _input.length - _alreadyChosen;
+        size_t i;
+
+        foreach (e; _input)
+        {
+            if (_chosen[i])
+            {
+                ++i;
+                continue;
+            }
+
+            // Roll a dice with k faces
+            auto chooseMe = uniform(0, k, _rng) == 0;
+            assert(k > 1 || chooseMe);
+
+            if (chooseMe)
+            {
+                _chosen[i] = true;
+                _current = i;
+                ++_alreadyChosen;
+                return;
+            }
+
+            --k;
+            ++i;
+        }
+    }
+
+    /// ditto
+    static if (hasLength!Range)
+    {
+        size_t length() @property @safe const nothrow pure
+        in
+        {
+            assert(_alreadyChosen > 0);
+        }
+        body
+        {
+            return (1 + _input.length) - _alreadyChosen;
+        }
+    }
+
+    /// ditto
+    static if (isForwardRange!RandomGen)
+    {
+        typeof(this) save() @property
+        {
+            auto ret = new typeof(this)(_input.save, _rng.save, _chosen,
+                                        _current, _alreadyChosen);
+            return ret;
+        }
+    }
+
+}
+
+/// Ditto
+auto randomCover(Range, RandomGen)(Range r, RandomGen rng)
+    if (isRandomAccessRange!Range && isUniformRNG!RandomGen)
+{
+    return new RandomCover!(Range, RandomGen)(r, rng);
+}
+
+/// Ditto
+auto randomCover(Range)(Range r)
+    if (isRandomAccessRange!Range)
+{
+    return new RandomCover!(Range, Random)(r, rndGen);
+}
+
+unittest
+{
+    import std.typetuple;
+
+    int[] a = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
+
+    foreach (RandomGen; TypeTuple!(void, UniformRNGTypes))
+    {
+        static if (is(RandomGen == void))
+        {
+            auto rc = randomCover(a);
+            static assert(isInputRange!(typeof(rc)));
+            static assert((isForwardRange!Random && isForwardRange!(typeof(rc))) ||
+                          (!isForwardRange!Random && !isForwardRange!(typeof(rc))));
+        }
+        else
+        {
+            auto rng = new RandomGen(unpredictableSeed);
+            auto rc = randomCover(a, rng);
+            static assert(isInputRange!(typeof(rc)));
+            static assert((isForwardRange!RandomGen && isForwardRange!(typeof(rc))) ||
+                          (!isForwardRange!RandomGen && !isForwardRange!(typeof(rc))));
+        }
+
+        auto rc2 = rc.save;
+
+        int[] b = new int[9];
+        uint i;
+        foreach (e, e2; lockstep(rc, rc2))
+        {
+            b[i++] = e;
+            assert(e == e2);
+        }
+        sort(b);
+        assert(a == b, format("%s", b));
+    }
 }
 
 // RandomSample
@@ -534,24 +726,20 @@ unittest
         {
             uint i = 0;
 
-            // These tests can be reinstated when RandomCover is implemented.
-            version(none)
+            // Small sample/source ratio, no specified RNG.
+            foreach (e; randomSample(randomCover(a), 5))
             {
-                // Small sample/source ratio, no specified RNG.
-                foreach (e; randomSample(randomCover(a), 5))
-                {
-                    ++i;
-                }
-                assert(i == 5);
-
-                // Small sample/source ratio, specified RNG.
-                i = 0;
-                foreach (e; randomSample(randomCover(a), 5, rng))
-                {
-                    ++i;
-                }
-                assert(i == 5);
+                ++i;
             }
+            assert(i == 5);
+
+            // Small sample/source ratio, specified RNG.
+            i = 0;
+            foreach (e; randomSample(randomCover(a), 5, rng))
+            {
+                ++i;
+            }
+            assert(i == 5);
 
             // Large sample/source ratio, no specified RNG.
             i = 0;
