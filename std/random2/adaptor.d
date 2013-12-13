@@ -12,39 +12,48 @@ unittest
 
 // RandomSample
 /**
-Selects a random subsample out of $(D r), containing exactly $(D n)
-elements. The order of elements is the same as in the original
-range. The total length of $(D r) must be known. If $(D total) is
-passed in, the total number of sample is considered to be $(D
-total). Otherwise, $(D RandomSample) uses $(D r.length).
-
-$(D RandomSample) implements Jeffrey Scott Vitter's Algorithm D
-(see Vitter $(WEB dx.doi.org/10.1145/358105.893, 1984), $(WEB
-dx.doi.org/10.1145/23002.23003, 1987)), which selects a sample
-of size $(D n) in O(n) steps and requiring O(n) random variates,
-regardless of the size of the data being sampled.  The exception
-to this is if traversing k elements on the input range is itself
-an O(k) operation (e.g. when sampling lines from an input file),
-in which case the sampling calculation will inevitably be of
-O(total).
-
-RandomSample will throw an exception if $(D total) is verifiably
-less than the total number of elements available in the input,
-or if $(D n > total).
-
-If no random number generator is passed to $(D randomSample), the
-thread-global RNG rndGen will be used internally.
-
-Example:
-----
-int[] a = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ];
-// Print 5 random elements picked off from a
-foreach (e; randomSample(a, 5))
-{
-    writeln(e);
-}
-----
-*/
+ * Selects a random subsample out of $(D r), containing exactly $(D n)
+ * elements. The order of elements is the same as in the original
+ * range. The total length of $(D r) must be known. If $(D total) is
+ * passed in, the total number of sample is considered to be $(D
+ * total). Otherwise, $(D RandomSample) uses $(D r.length).
+ *
+ * $(D RandomSample) implements Jeffrey Scott Vitter's Algorithm D
+ * (see Vitter $(WEB dx.doi.org/10.1145/358105.893, 1984), $(WEB
+ * dx.doi.org/10.1145/23002.23003, 1987)), which selects a sample
+ * of size $(D n) in O(n) steps and requiring O(n) random variates,
+ * regardless of the size of the data being sampled.  The exception
+ * to this is if traversing k elements on the input range is itself
+ * an O(k) operation (e.g. when sampling lines from an input file),
+ * in which case the sampling calculation will inevitably be of
+ * O(total).
+ *
+ * RandomSample will throw an error if $(D total) is verifiably less
+ * than the total number of elements available in the input, or if
+ * $(D n > total).
+ *
+ * If no random number generator is passed to $(D randomSample), the
+ * thread-local default RNG rndGen will be used to generate the
+ * sample.
+ *
+ * Example:
+ * ----
+ * int[] arr = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ];
+ * // Print 5 random elements picked from arr
+ * foreach (e; randomSample(arr, 5))
+ * {
+ *     writeln(e);
+ * }
+ *
+ * // Print 5 random elements picked from arr,
+ * // using a specified random number generator
+ * auto gen = new Random(unpredictableSeed);
+ * foreach (e; randomSample(arr, 5, gen))
+ * {
+ *     writeln(e);
+ * }
+ * ----
+ */
 final class RandomSample(Range, RandomGen)
     if (isInputRange!Range && isUniformRNG!RandomGen)
 {
