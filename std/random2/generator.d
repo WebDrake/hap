@@ -297,11 +297,13 @@ final class LinearCongruentialEngine(UIntType,
     static assert(m == 0 || c < m);
     static assert(m == 0 || (cast(ulong) a * (m - 1) + c) % m == (c < a ? c - a + m : c - a));
 
+    /// Constructs a $(D LinearCongruentialEngine) using the default seed configuration.
     this()
     {
         // Default seed already set to m ? (a + c) % m : (a + c)
     }
 
+    /// Constructs a $(D LinearCongruentialEngine) seeded with $(D_PARAM x0).
     this(in UIntType x0)
     {
         seed(x0);
@@ -319,7 +321,7 @@ final class LinearCongruentialEngine(UIntType,
 
     // ----- Range primitives -------------------------------------------------
 
-    /// Always $(D false) (random generators are infinite ranges).
+    /// Always $(D false) (random number generators are infinite ranges).
     enum bool empty = false;
 
     /// Returns the current pseudo-random value.
@@ -328,6 +330,7 @@ final class LinearCongruentialEngine(UIntType,
         return _x;
     }
 
+    /// Advances the pseudo-random sequence.
     void popFront() @safe nothrow pure
     {
         static if (m)
@@ -459,7 +462,7 @@ final class MersenneTwisterEngine(UIntType,
     /// Mark this as a uniform RNG
     enum bool isUniformRandom = true;
 
-    /// Parameter for the generator
+    /// Parameters for the generator
     enum size_t wordSize = w;
     enum size_t stateSize = n;
     enum size_t shiftSize = m;
@@ -481,14 +484,16 @@ final class MersenneTwisterEngine(UIntType,
     enum UIntType max =
         w == UIntType.sizeof * 8 ? UIntType.max : (to!UIntType(1) << w) - 1;
 
-    /// The default seed value
+    /// Default seed value
     enum UIntType defaultSeed = 5489U;
 
+    /// Constructs a $(D MersenneTwisterEngine) using the default seed.
     this()
     {
         seed(this.defaultSeed);
     }
 
+    /// Constructs a $(D MersenneTwisterEngine) seeded with $(D_PARAM value).
     this(in UIntType value)
     {
         seed(value);
@@ -506,7 +511,7 @@ final class MersenneTwisterEngine(UIntType,
     }
 
     void seed(Range)(Range range)
-    if (isInputRange!Range && is(Unqual!(ElementType!Range) : UIntType))
+        if (isInputRange!Range && is(Unqual!(ElementType!Range) : UIntType))
     {
         size_t j;
         for (j = 0; j < n && !range.empty; ++j, range.popFront())
@@ -526,7 +531,7 @@ final class MersenneTwisterEngine(UIntType,
 
     // ----- Range primitives -------------------------------------------------
 
-    /// Always $(D false) (random generators are infinite ranges).
+    /// Always $(D false) (random number generators are infinite ranges).
     enum bool empty = false;
 
     /// Returns the current pseudo-random value.
@@ -540,7 +545,7 @@ final class MersenneTwisterEngine(UIntType,
         return _y;
     }
 
-    /// Advances the generator.
+    /// Advances the pseudo-random sequence.
     void popFront() @safe nothrow pure
     in
     {
@@ -611,6 +616,7 @@ final class MersenneTwisterEngine(UIntType,
     override bool opEquals(Object rhs) @safe const nothrow pure
     {
         auto that = cast(typeof(this)) rhs;
+
         if (that is null)
         {
             return false;
@@ -664,9 +670,17 @@ unittest
 
 unittest
 {
+    foreach (MtGen; TypeTuple!(Mt11213b, Mt19937))
+    {
+        assert(isUniformRNG!(MtGen, uint));
+    }
+
+    assert(isUniformRNG!(Mt19937_64, ulong));
+    assert(isSeedable!(Mt19937_64, ulong));
+
     foreach (MtGen; TypeTuple!(Mt11213b, Mt19937, Mt19937_64))
     {
-        assert(isSeedable!(MtGen, typeof(MtGen.front)));
+        assert(isSeedable!(MtGen, uint));
         assert(isForwardRange!MtGen);
 
         auto gen = new MtGen;
@@ -683,7 +697,7 @@ unittest
 }
 
 /**
- * Xorshift generator using 32bit algorithm.
+ * Xorshift generator using 32-bit datatype.
  *
  * Implemented according to $(WEB www.jstatsoft.org/v08/i14/paper, Xorshift RNGs).
  *
