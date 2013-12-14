@@ -3,12 +3,6 @@ module std.random2.generator;
 import std.algorithm, std.conv, std.exception, std.range, std.traits, std.typetuple, core.thread;
 import std.string : format;
 
-unittest
-{
-    import std.stdio;
-    writeln("std.random2.generator has been imported.");
-}
-
 /// $(D TypeTuple) of all uniform RNGs defined in this module.
 alias UniformRNGTypes =
     TypeTuple!(MinstdRand0, MinstdRand,
@@ -58,12 +52,6 @@ unittest
     {
         assert(isUniformRNG!RandomGen);
         assert(isSeedable!RandomGen);
-
-        import std.stdio;
-        writeln(RandomGen.stringof);
-        writeln("\tType: ", typeof(RandomGen.front).stringof);
-        writeln("\tmin = ", RandomGen.min);
-        writeln("\tmax = ", RandomGen.max);
 
         // Ensure that popFront() actually changes the RNG state
         typeof(RandomGen.front) a, b;

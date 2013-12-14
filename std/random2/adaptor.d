@@ -4,12 +4,6 @@ import std.random2.distribution, std.random2.generator;
 
 import std.algorithm, std.exception, std.math, std.range, std.traits;
 
-unittest
-{
-    import std.stdio;
-    writeln("std.random2.adaptor has been imported.");
-}
-
 // dice
 /**
 Rolls a random die with relative probabilities stored in $(D proportions).
