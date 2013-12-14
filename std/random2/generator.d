@@ -242,8 +242,8 @@ unittest
     static assert(isSeedable!(seedRng));
 }
 
-final class LinearCongruentialEngine(UIntType,
-                                     UIntType a, UIntType c, UIntType m)
+@safe final class LinearCongruentialEngine(UIntType,
+                                           UIntType a, UIntType c, UIntType m)
     if (isUnsigned!UIntType && isIntegral!UIntType)
 {
   private:
@@ -320,13 +320,13 @@ final class LinearCongruentialEngine(UIntType,
     static assert(m == 0 || (cast(ulong) a * (m - 1) + c) % m == (c < a ? c - a + m : c - a));
 
     /// Constructs a $(D LinearCongruentialEngine) using the default seed configuration.
-    this()
+    this() @safe
     {
         // Default seed already set to m ? (a + c) % m : (a + c)
     }
 
     /// Constructs a $(D LinearCongruentialEngine) seeded with $(D_PARAM x0).
-    this(in UIntType x0)
+    this(in UIntType x0) @safe
     {
         seed(x0);
     }
@@ -384,7 +384,7 @@ final class LinearCongruentialEngine(UIntType,
         }
     }
 
-    typeof(this) save() @property
+    typeof(this) save() @property @safe
     {
         auto ret = new typeof(this);
         ret._x = this._x;
@@ -510,13 +510,13 @@ final class MersenneTwisterEngine(UIntType,
     enum UIntType defaultSeed = 5489U;
 
     /// Constructs a $(D MersenneTwisterEngine) using the default seed.
-    this()
+    this() @safe
     {
         seed(this.defaultSeed);
     }
 
     /// Constructs a $(D MersenneTwisterEngine) seeded with $(D_PARAM value).
-    this(in UIntType value)
+    this(in UIntType value) @safe
     {
         seed(value);
     }
@@ -626,7 +626,7 @@ final class MersenneTwisterEngine(UIntType,
         _y = y;
     }
 
-    typeof(this) save() @property
+    typeof(this) save() @property @safe
     {
         auto ret = new typeof(this);
         ret.mt[] = this.mt[];
@@ -733,7 +733,8 @@ unittest
  *  $(TR $(TD 192)  $(TD 2^192 - 2^32))
  * )
  */
-final class XorshiftEngine(UIntType, UIntType bits, UIntType a, UIntType b, UIntType c)
+@safe final class XorshiftEngine(UIntType,
+                                 UIntType bits, UIntType a, UIntType b, UIntType c)
     if (isUnsigned!UIntType)
 {
   private:
@@ -910,7 +911,7 @@ final class XorshiftEngine(UIntType, UIntType bits, UIntType a, UIntType b, UInt
     /**
      * Captures a range state.
      */
-    typeof(this) save() @property
+    typeof(this) save() @property @safe
     {
         auto ret = new typeof(this);
         assert(ret._seeds.length == this._seeds.length);
