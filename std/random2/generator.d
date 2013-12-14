@@ -234,6 +234,15 @@ unittest
     static assert(isSeedable!(seedRng));
 }
 
+/**
+ * Linear congruential generators are some of the oldest algorithms for
+ * generating pseudo-random numbers.  They tend to be fast but not of
+ * particularly high statistical quality, so their use is recommended
+ * only in very constrained circumstances, e.g. where memory is very
+ * severely restricted.  Even then, consider using an $(D_PARAM Xorshift)
+ * generator instead, as this should provide much higher statistical
+ * quality.
+ */
 @safe final class LinearCongruentialEngine(UIntType,
                                            UIntType a, UIntType c, UIntType m)
     if (isUnsigned!UIntType && isIntegral!UIntType)
@@ -402,7 +411,16 @@ unittest
     }
 }
 
+/**
+ * $(D_PARAM LinearCongruentialEngine) generators with well-chosen parameters.
+ * $(D MinstdRand0) implements Park and Miller's $(HTTPS
+ * en.wikipedia.org/wiki/Lehmer_random_number_generator, "minimal standard"
+ * generator), which uses 16807 for the multiplier.  $(D MinstdRand) implements
+ * a variant that has slightly better spectral behaviour by using the multiplier
+ * 48271.  Both generators are rather simplistic.
+ */
 alias MinstdRand0 = LinearCongruentialEngine!(uint, 16807, 0, 2147483647);
+/// ditto
 alias MinstdRand = LinearCongruentialEngine!(uint, 48271, 0, 2147483647);
 
 unittest
@@ -460,6 +478,13 @@ unittest
     assert(gen != gen0);
 }
 
+/**
+ * The Mersenne Twister generator, developed by $(HTTP dx.doi.org/10.1145%2F272991.272995,
+ * Makoto Matsumoto and Takuji Nishimura (1997)), allows for fast generation of high-quality
+ * pseudorandom numbers, and is widely used as a default random number generator by many
+ * programming languages, including D.  The current implementation is adapted from that of
+ * Boost.Random and supports both 32- and 64-bit datatypes.
+ */
 final class MersenneTwisterEngine(UIntType,
                                   size_t w, size_t n, size_t m, size_t r,
                                   UIntType a, size_t u, UIntType d, size_t s,
@@ -646,6 +671,18 @@ final class MersenneTwisterEngine(UIntType,
     }
 }
 
+/**
+ * Mersenne Twister generators with well-chosen parameters.  $(D_PARAM Mt11213b)
+ * offers a generator with a period of 2^11213 - 1 and a 32-bit datatype, while
+ * $(D_PARAM Mt19937) and $(D_PARAM Mt19937_64) offer generators with 32- and 64-bit
+ * datatypes respectively, both having a period of 2^19937 - 1.  The three generators
+ * offer a good uniform distribution in up to 350, 623 and 311 dimensions respectively.
+ *
+ * For extensive information on the Mersenne Twister generator and the choices of
+ * parameters, see the $(HTTP http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html,
+ * Mersenne Twister homepage) hosted by the Department of Mathematics at Hiroshima
+ * University.
+ */
 alias Mt11213b =
     MersenneTwisterEngine!(uint,
                            32, 351, 175, 19,
@@ -653,6 +690,7 @@ alias Mt11213b =
                            0x31b6ab00U, 15,
                            0xffe50000U, 17, 1812433253U);
 
+/// ditto
 alias Mt19937 =
     MersenneTwisterEngine!(uint,
                            32, 624, 397, 31,
@@ -660,6 +698,7 @@ alias Mt19937 =
                            0x9d2c5680U, 15,
                            0xefc60000U, 18, 1812433253U);
 
+/// ditto
 alias Mt19937_64 =
     MersenneTwisterEngine!(ulong,
                            64, 312, 156, 31,
