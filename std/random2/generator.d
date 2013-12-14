@@ -9,7 +9,7 @@ unittest
     writeln("std.random2.generator has been imported.");
 }
 
-/// Tuple of all uniform RNGs defined in this module.
+/// $(D TypeTuple) of all uniform RNGs defined in this module.
 alias UniformRNGTypes =
     TypeTuple!(MinstdRand0, MinstdRand,
                Mt11213b, Mt19937, Mt19937_64,
@@ -18,6 +18,11 @@ alias UniformRNGTypes =
 /// Default RNG type recommended for general use.
 alias Random = Mt19937;
 
+/**
+ * Global random number generator used by various functions in this package
+ * whenever no other generator is specified.  It is allocated per-thread and
+ * initialized with a different unpredictable seed for each thread.
+ */
 ref Random rndGen() @property
 {
     static Random result = null;
@@ -115,65 +120,64 @@ unittest
 }
 
 /**
- * Test if Rng is a random-number generator. The overload
- * taking a ElementType also makes sure that the Rng generates
+ * Test if $(D RandomGen) is a random-number generator. The overload
+ * taking an $(D ElementType) also makes sure that the Rng generates
  * values of that type.
  *
  * A random-number generator has at least the following features:
  * $(UL
  *   $(LI it's an InputRange)
- *   $(LI it has a 'bool isUniformRandom' field readable in CTFE)
+ *   $(LI it has a $(D bool isUniformRandom) field readable in CTFE)
  * )
  */
-template isUniformRNG(Rng, ElementType)
+template isUniformRNG(RandomGen, ElementType)
 {
-    enum bool isUniformRNG = isInputRange!Rng &&
-        is(typeof(Rng.front) == ElementType) &&
+    enum bool isUniformRNG = isInputRange!RandomGen &&
+        is(typeof(RandomGen.front) == ElementType) &&
         is(typeof(
         {
-            static assert(Rng.isUniformRandom); //tag
+            static assert(RandomGen.isUniformRandom); //tag
+        }));
+}
+
+/// ditto
+template isUniformRNG(RandomGen)
+{
+    enum bool isUniformRNG = isInputRange!RandomGen &&
+        is(typeof(
+        {
+            static assert(RandomGen.isUniformRandom); //tag
         }));
 }
 
 /**
- * ditto
- */
-template isUniformRNG(Rng)
-{
-    enum bool isUniformRNG = isInputRange!Rng &&
-        is(typeof(
-        {
-            static assert(Rng.isUniformRandom); //tag
-        }));
-}
-
-/**
- * Test if Rng is seedable. The overload
- * taking a SeedType also makes sure that the Rng can be seeded with SeedType.
+ * Test if $(D RandomGen) is a seedable uniform random number generator.
+ * The overload taking a $(D SeedType) also makes sure that the generator
+ * can be seeded with $(D SeedType).
  *
  * A seedable random-number generator has the following additional features:
  * $(UL
- *   $(LI it has a 'seed(ElementType)' function)
+ *   $(LI it has a $(D seed(ElementType)) function)
  * )
  */
-template isSeedable(Rng, SeedType)
+template isSeedable(RandomGen, SeedType)
 {
-    enum bool isSeedable = isUniformRNG!(Rng) &&
+    enum bool isSeedable = isUniformRNG!RandomGen &&
         is(typeof(
         {
-            Rng r = void;              // can define a Rng object
-            r.seed(SeedType.init);     // can seed a Rng
+            RandomGen r = void;     // can define a Rng object
+            r.seed(SeedType.init);  // can seed a Rng
         }));
 }
 
 ///ditto
-template isSeedable(Rng)
+template isSeedable(RandomGen)
 {
-    enum bool isSeedable = isUniformRNG!Rng &&
+    enum bool isSeedable = isUniformRNG!RandomGen &&
         is(typeof(
         {
-            Rng r = void;                     // can define a Rng object
-            r.seed(typeof(r.front).init);     // can seed a Rng
+            RandomGen r = void;            // can define a Rng object
+            r.seed(typeof(r.front).init);  // can seed a Rng
         }));
 }
 
