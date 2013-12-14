@@ -10,7 +10,10 @@ unittest
 }
 
 /// Tuple of all uniform RNGs defined in this module.
-alias UniformRNGTypes = TypeTuple!(MinstdRand0, MinstdRand, Mt11213b, Mt19937, Mt19937_64);
+alias UniformRNGTypes =
+    TypeTuple!(MinstdRand0, MinstdRand,
+               Mt11213b, Mt19937, Mt19937_64,
+               Xorshift32, Xorshift64, Xorshift128, Xorshift160, Xorshift192);
 
 /// Default RNG type recommended for general use.
 alias Random = Mt19937;
@@ -676,6 +679,291 @@ unittest
 
         // infinite range
         gen.seed(repeat(0).map!((a) => (a + 1)));
+    }
+}
+
+/**
+ * Xorshift generator using 32bit algorithm.
+ *
+ * Implemented according to $(WEB www.jstatsoft.org/v08/i14/paper, Xorshift RNGs).
+ *
+ * $(BOOKTABLE $(TEXTWITHCOMMAS Supporting bits are below, $(D bits) means second parameter of XorshiftEngine.),
+ *  $(TR $(TH bits) $(TH period))
+ *  $(TR $(TD 32)   $(TD 2^32 - 1))
+ *  $(TR $(TD 64)   $(TD 2^64 - 1))
+ *  $(TR $(TD 96)   $(TD 2^96 - 1))
+ *  $(TR $(TD 128)  $(TD 2^128 - 1))
+ *  $(TR $(TD 160)  $(TD 2^160 - 1))
+ *  $(TR $(TD 192)  $(TD 2^192 - 2^32))
+ * )
+ */
+final class XorshiftEngine(UIntType, UIntType bits, UIntType a, UIntType b, UIntType c)
+    if (isUnsigned!UIntType)
+{
+  private:
+    enum size = bits / 32;
+
+    static if (bits == 32)
+    {
+        UIntType[size] _seeds = [2463534242];
+    }
+    else static if (bits == 64)
+    {
+        UIntType[size] _seeds = [123456789, 362436069];
+    }
+    else static if (bits == 96)
+    {
+        UIntType[size] _seeds = [123456789, 362436069, 521288629];
+    }
+    else static if (bits == 128)
+    {
+        UIntType[size] _seeds = [123456789, 362436069, 521288629, 88675123];
+    }
+    else static if (bits == 160)
+    {
+        UIntType[size] _seeds = [123456789, 362436069, 521288629, 88675123, 5783321];
+    }
+    else static if (bits == 192)
+    {
+        UIntType[size] _seeds = [123456789, 362436069, 521288629, 88675123, 5783321, 6615241];
+        UIntType       _value;
+    }
+    else
+    {
+        static assert(false, format("Phobos Error: Xorshift has no instantiation rule for %s bits.", bits));
+    }
+
+    static assert(bits == 32 || bits == 64 || bits == 96 || bits == 128 || bits == 160 || bits == 192,
+                  format("Xorshift supports only 32, 64, 96, 128, 160 and 192 bit versions. %s is not supported.", bits));
+
+    static void sanitizeSeeds(ref UIntType[size] seeds) @safe nothrow pure
+    {
+        for (uint i; i < seeds.length; i++)
+        {
+            if (seeds[i] == 0)
+                seeds[i] = i + 1;
+        }
+    }
+
+    unittest
+    {
+        static if (size == 4)  // Other bits too
+        {
+            UIntType[size] seeds = [1, 0, 0, 4];
+
+            sanitizeSeeds(seeds);
+
+            assert(seeds == [1, 2, 3, 4]);
+        }
+    }
+
+  public:
+    ///Mark this as a Rng
+    enum bool isUniformRandom = true;
+    /// Smallest generated value (0).
+    enum UIntType min = 0;
+    /// Largest generated value.
+    enum UIntType max = UIntType.max;
+
+    /// Constructs an $(D XorshiftEngine) using the default seed configuration.
+    this() @safe
+    {
+        // seed values are already set, nothing to do :-)
+    }
+
+    /// Constructs an $(D XorshiftEngine) generator seeded with $(D_PARAM x0).
+    this(in UIntType x0) @safe
+    {
+        seed(x0);
+    }
+
+
+    /// (Re)seeds the generator with $(D_PARAM x0).
+    void seed(UIntType x0) @safe nothrow pure
+    {
+        // Initialization routine from MersenneTwisterEngine.
+        foreach (i, e; _seeds)
+        {
+            _seeds[i] = x0 = cast(UIntType)(1812433253U * (x0 ^ (x0 >> 30)) + i + 1);
+        }
+
+        // All seeds must not be 0.
+        sanitizeSeeds(_seeds);
+
+        popFront();
+    }
+
+
+    // ----- Range primitives -------------------------------------------------
+
+    /// Always $(D false) (random number generators are infinite ranges).
+    enum bool empty = false;
+
+    /// Returns the current pseudo-random value.
+    UIntType front() @property @safe const nothrow pure
+    {
+        static if (bits == 192)
+        {
+            return _value;
+        }
+        else
+        {
+            return _seeds[size - 1];
+        }
+    }
+
+
+    /// Advances the pseudo-random sequence.
+    void popFront() @safe nothrow pure
+    {
+        UIntType temp;
+
+        static if (bits == 32)
+        {
+            temp      = _seeds[0] ^ (_seeds[0] << a);
+            temp      = temp ^ (temp >> b);
+            _seeds[0] = temp ^ (temp << c);
+        }
+        else static if (bits == 64)
+        {
+            temp      = _seeds[0] ^ (_seeds[0] << a);
+            _seeds[0] = _seeds[1];
+            _seeds[1] = _seeds[1] ^ (_seeds[1] >> c) ^ temp ^ (temp >> b);
+        }
+        else static if (bits == 96)
+        {
+            temp      = _seeds[0] ^ (_seeds[0] << a);
+            _seeds[0] = _seeds[1];
+            _seeds[1] = _seeds[2];
+            _seeds[2] = _seeds[2] ^ (_seeds[2] >> c) ^ temp ^ (temp >> b);
+        }
+        else static if (bits == 128)
+        {
+            temp      = _seeds[0] ^ (_seeds[0] << a);
+            _seeds[0] = _seeds[1];
+            _seeds[1] = _seeds[2];
+            _seeds[2] = _seeds[3];
+            _seeds[3] = _seeds[3] ^ (_seeds[3] >> c) ^ temp ^ (temp >> b);
+        }
+        else static if (bits == 160)
+        {
+            temp      = _seeds[0] ^ (_seeds[0] << a);
+            _seeds[0] = _seeds[1];
+            _seeds[1] = _seeds[2];
+            _seeds[2] = _seeds[3];
+            _seeds[3] = _seeds[4];
+            _seeds[4] = _seeds[4] ^ (_seeds[4] >> c) ^ temp ^ (temp >> b);
+        }
+        else static if (bits == 192)
+        {
+            temp      = _seeds[0] ^ (_seeds[0] >> a);
+            _seeds[0] = _seeds[1];
+            _seeds[1] = _seeds[2];
+            _seeds[2] = _seeds[3];
+            _seeds[3] = _seeds[4];
+            _seeds[4] = _seeds[4] ^ (_seeds[4] << c) ^ temp ^ (temp << b);
+            _value    = _seeds[4] + (_seeds[5] += 362437);
+        }
+        else
+        {
+            static assert(false, format("Phobos Error: Xorshift has no popFront() update for %s bits.", bits));
+        }
+    }
+
+
+    /**
+     * Captures a range state.
+     */
+    typeof(this) save() @property
+    {
+        auto ret = new typeof(this);
+        assert(ret._seeds.length == this._seeds.length);
+        ret._seeds[] = this._seeds[];
+        static if (bits == 192)
+        {
+            ret._value = this._value;
+        }
+        return ret;
+    }
+
+
+    /**
+     * Compares against $(D_PARAM rhs) for equality.
+     */
+    override bool opEquals(Object rhs) @safe const nothrow pure
+    {
+        auto that = cast(typeof(this)) rhs;
+
+        if (that is null)
+        {
+            return false;
+        }
+        else
+        {
+            static if (bits == 192)
+            {
+                if (this._value != that._value)
+                {
+                    return false;
+                }
+            }
+
+            return this._seeds == that._seeds;
+        }
+    }
+}
+
+
+/**
+ * Define $(D XorshiftEngine) generators with well-chosen parameters. See each bits examples of "Xorshift RNGs".
+ * $(D Xorshift) is a Xorshift128's alias because 128bits implementation is mostly used.
+ *
+ * Example:
+ * -----
+ * // Seed with a constant
+ * auto rnd = Xorshift(1);
+ * auto num = rnd.front;  // same for each run
+ *
+ * // Seed with an unpredictable value
+ * rnd.seed(unpredictableSeed());
+ * num = rnd.front; // different across runs
+ * -----
+ */
+alias XorshiftEngine!(uint, 32,  13, 17, 15)  Xorshift32;
+alias XorshiftEngine!(uint, 64,  10, 13, 10) Xorshift64;   /// ditto
+alias XorshiftEngine!(uint, 96,  10, 5,  26) Xorshift96;   /// ditto
+alias XorshiftEngine!(uint, 128, 11, 8,  19) Xorshift128;  /// ditto
+alias XorshiftEngine!(uint, 160, 2,  1,  4)  Xorshift160;  /// ditto
+alias XorshiftEngine!(uint, 192, 2,  1,  4)  Xorshift192;  /// ditto
+alias Xorshift128 Xorshift;                                /// ditto
+
+unittest
+{
+    // Result from reference implementation.
+    auto checking = [
+        [2463534242UL, 901999875, 3371835698, 2675058524, 1053936272, 3811264849, 472493137, 3856898176, 2131710969, 2312157505],
+        [362436069UL, 2113136921, 19051112, 3010520417, 951284840, 1213972223, 3173832558, 2611145638, 2515869689, 2245824891],
+        [521288629UL, 1950277231, 185954712, 1582725458, 3580567609, 2303633688, 2394948066, 4108622809, 1116800180, 3357585673],
+        [88675123UL, 3701687786, 458299110, 2500872618, 3633119408, 516391518, 2377269574, 2599949379, 717229868, 137866584],
+        [5783321UL, 393427209, 1947109840, 565829276, 1006220149, 971147905, 1436324242, 2800460115, 1484058076, 3823330032],
+        [0UL, 246875399, 3690007200, 1264581005, 3906711041, 1866187943, 2481925219, 2464530826, 1604040631, 3653403911]
+    ];
+
+    alias TypeTuple!(Xorshift32, Xorshift64, Xorshift96, Xorshift128, Xorshift160, Xorshift192) XorshiftTypes;
+
+    foreach (i, XorGen; XorshiftTypes)
+    {
+        assert(isUniformRNG!(XorGen, uint));
+        assert(isSeedable!(XorGen, uint));
+        assert(isForwardRange!XorGen);
+
+        auto gen = new XorGen;
+
+        foreach (e; checking[i])
+        {
+            assert(gen.front == e);
+            gen.popFront();
+        }
     }
 }
 
