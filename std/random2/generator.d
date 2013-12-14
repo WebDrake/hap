@@ -90,6 +90,28 @@ unittest
             assert(gen2.front != gen1.front);
         }
     }
+
+    // Ensure different RNGs don't evaluate as equal
+    foreach (i, RandomGen1; UniformRNGTypes)
+    {
+        foreach (j, RandomGen2; UniformRNGTypes)
+        {
+            auto gen1 = new RandomGen1;
+            auto gen2 = new RandomGen2;
+
+            if (i == j)
+            {
+                /* Should both seed with default config,
+                 * and therefore be equal.
+                 */
+                assert(gen1 == gen2);
+            }
+            else
+            {
+                assert(gen1 != gen2);
+            }
+        }
+    }
 }
 
 /**
