@@ -187,6 +187,10 @@ unittest
     static assert(!isUniformRNG!(NoRng));
     static assert(!isSeedable!(NoRng, uint));
     static assert(!isSeedable!(NoRng));
+    NoRng noRng;
+    noRng.popFront();
+    assert(!noRng.empty);
+    assert(!noRng.front);
 
     struct NoRng2
     {
@@ -200,6 +204,10 @@ unittest
     static assert(!isUniformRNG!(NoRng2));
     static assert(!isSeedable!(NoRng2, uint));
     static assert(!isSeedable!(NoRng2));
+    NoRng2 noRng2;
+    noRng2.popFront();
+    assert(!noRng2.empty);
+    assert(!noRng2.front);
 
     struct NoRng3
     {
@@ -212,8 +220,11 @@ unittest
     static assert(!isUniformRNG!(NoRng3));
     static assert(!isSeedable!(NoRng3, uint));
     static assert(!isSeedable!(NoRng3));
+    NoRng3 noRng3;
+    noRng3.popFront();
+    assert(!noRng3.empty);
 
-    struct validRng
+    struct ValidRng
     {
         @property uint front() {return 0;}
         @property bool empty() {return false;}
@@ -221,12 +232,16 @@ unittest
 
         enum isUniformRandom = true;
     }
-    static assert(isUniformRNG!(validRng, uint));
-    static assert(isUniformRNG!(validRng));
-    static assert(!isSeedable!(validRng, uint));
-    static assert(!isSeedable!(validRng));
+    static assert(isUniformRNG!(ValidRng, uint));
+    static assert(isUniformRNG!(ValidRng));
+    static assert(!isSeedable!(ValidRng, uint));
+    static assert(!isSeedable!(ValidRng));
+    ValidRng validRng;
+    validRng.popFront();
+    assert(!validRng.empty);
+    assert(!validRng.front);
 
-    struct seedRng
+    struct SeedRng
     {
         @property uint front() {return 0;}
         @property bool empty() {return false;}
@@ -234,10 +249,15 @@ unittest
         void seed(uint val){}
         enum isUniformRandom = true;
     }
-    static assert(isUniformRNG!(seedRng, uint));
-    static assert(isUniformRNG!(seedRng));
-    static assert(isSeedable!(seedRng, uint));
-    static assert(isSeedable!(seedRng));
+    static assert(isUniformRNG!(SeedRng, uint));
+    static assert(isUniformRNG!(SeedRng));
+    static assert(isSeedable!(SeedRng, uint));
+    static assert(isSeedable!(SeedRng));
+    SeedRng seedRng;
+    seedRng.seed(unpredictableSeed);
+    seedRng.popFront();
+    assert(!seedRng.empty);
+    assert(!seedRng.front);
 }
 
 /**
