@@ -9,7 +9,13 @@ alias UniformRNGTypes =
                Mt11213b, Mt19937, Mt19937_64,
                Xorshift32, Xorshift64, Xorshift128, Xorshift160, Xorshift192);
 
-/// Default RNG type recommended for general use.
+/**
+ * The "default", "recommended" RNG type for the current platform, implemented
+ * as an alias to one of the generators defined elsewhere in this module.
+ * Its use is suggested if you want to generate good-quality random numbers
+ * without caring about the minutiae of the method being used.  The default
+ * thread-local RNG instance $(D_PARAM rndGen) is of type $(D Random).
+ */
 alias Random = Mt19937;
 
 /**
@@ -418,6 +424,19 @@ unittest
  * generator), which uses 16807 for the multiplier.  $(D MinstdRand) implements
  * a variant that has slightly better spectral behaviour by using the multiplier
  * 48271.  Both generators are rather simplistic.
+ *
+ * Example:
+ * --------
+ * // Initialize generator seeded with constant default value
+ * auto rng0 = new MinstdRand0;
+ * auto n = rng0.front;  // same for each run
+ * // Seed with an unpredictable value
+ * rng0.seed(unpredictableSeed);
+ * n = rng0.front;  // different across runs
+ *
+ * // Initialize a different generator with an unpredictable seed
+ * auto rng = new MinstdRand(unpredictableSeed);
+ * --------
  */
 alias MinstdRand0 = LinearCongruentialEngine!(uint, 16807, 0, 2147483647);
 /// ditto
@@ -677,6 +696,18 @@ final class MersenneTwisterEngine(UIntType,
  * $(D_PARAM Mt19937) and $(D_PARAM Mt19937_64) offer generators with 32- and 64-bit
  * datatypes respectively, both having a period of 2^19937 - 1.  The three generators
  * offer a good uniform distribution in up to 350, 623 and 311 dimensions respectively.
+ * $(D_PARAM Mt19937) is the most typical configuration, widely used in many different
+ * programming languages as a high-quality default random number generator.
+ *
+ * Example:
+ * --------
+ * // Initialize a Mersenne Twister seeded with constant default value
+ * auto rng = new Mt19937;
+ * auto n = rng.front;  // same for each run
+ * // Seed with a thread-safe unpredictable value
+ * rng.seed(unpredictableSeed);
+ * n = rng.front;  // different across runs
+ * --------
  *
  * For extensive information on the Mersenne Twister generator and the choices of
  * parameters, see the $(HTTP http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html,
@@ -750,11 +781,19 @@ unittest
 }
 
 /**
- * Xorshift generator using 32-bit datatype.
+ * The Xorshift family of generators, developed by $(HTTP www.jstatsoft.org/v08/i14/paper,
+ * George Marsaglia (2003)), offer high-quality random number generation with minimal
+ * storage requirements and computational cost.  They are therefore highly suitable for
+ * use in low-memory environments or slower processors.  The current implementation
+ * supports Xorshift random number generation with a 32-bit datatype only.
  *
- * Implemented according to $(WEB www.jstatsoft.org/v08/i14/paper, Xorshift RNGs).
+ * The total number of $(D bits) used to store the internal state is reflected in the
+ * statistical quality of the resulting generator.  The table below lists the number of
+ * bits used by each Xorshift generator (which must be a multiple of the datatype size)
+ * and the corresponding period of the generator.
  *
- * $(BOOKTABLE $(TEXTWITHCOMMAS Supporting bits are below, $(D bits) means second parameter of XorshiftEngine.),
+ * $(BOOKTABLE $(TEXTWITHCOMMAS Number of $(D bits) used (2nd parameter of $(D_PARAM XorshiftEngine))
+ *                              and corresponding period of the resulting generator),
  *  $(TR $(TH bits) $(TH period))
  *  $(TR $(TD 32)   $(TD 2^32 - 1))
  *  $(TR $(TD 64)   $(TD 2^64 - 1))
@@ -861,7 +900,6 @@ unittest
         popFront();
     }
 
-
     // ----- Range primitives -------------------------------------------------
 
     /// Always $(D false) (random number generators are infinite ranges).
@@ -879,7 +917,6 @@ unittest
             return _seeds[size - 1];
         }
     }
-
 
     /// Advances the pseudo-random sequence.
     void popFront() @safe nothrow pure
@@ -983,18 +1020,20 @@ unittest
 
 
 /**
- * Define $(D XorshiftEngine) generators with well-chosen parameters. See each bits examples of "Xorshift RNGs".
- * $(D Xorshift) is a Xorshift128's alias because 128bits implementation is mostly used.
+ * Define $(D XorshiftEngine) generators with well-chosen parameters as provided by
+ * $(HTTP www.jstatsoft.org/v08/i14/paper, Marsaglia (2003)).  The default provided
+ * by $(D_PARAM Xorshift) corresponds to the 128-bit generator as an optimal balance
+ * of statistical quality and speed.
  *
  * Example:
  * -----
- * // Seed with a constant
- * auto rnd = Xorshift(1);
- * auto num = rnd.front;  // same for each run
+ * // Initialize an Xorshift generator seeded with constant default value
+ * auto rng = new Xorshift;
+ * auto n = rng.front;  // same for each run
  *
  * // Seed with an unpredictable value
- * rnd.seed(unpredictableSeed());
- * num = rnd.front; // different across runs
+ * rng.seed(unpredictableSeed);
+ * n = rng.front;  // different across runs
  * -----
  */
 alias XorshiftEngine!(uint, 32,  13, 17, 15)  Xorshift32;
@@ -1035,6 +1074,17 @@ unittest
     }
 }
 
+/**
+ * A "good" seed for initializing random number generators.  Initializing
+ * with $(D_PARAM unpredictableSeed) ensures that RNGs produce different
+ * pseudo-random sequences each time they are run.
+ *
+ * Example:
+ * --------
+ * auto rng = Random(unpredictableSeed);
+ * auto n = rng.front;
+ * --------
+ */
 uint unpredictableSeed() @property
 {
     static MinstdRand0 rand = null;
