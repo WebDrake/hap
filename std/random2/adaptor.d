@@ -1,6 +1,6 @@
 module std.random2.adaptor;
 
-import std.random2.distribution, std.random2.generator;
+import std.random2.distribution, std.random2.generator, std.random2.traits;
 
 import std.algorithm, std.exception, std.math, std.range, std.traits;
 

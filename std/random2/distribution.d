@@ -1,6 +1,6 @@
 module std.random2.distribution;
 
-import std.random2.generator;
+import std.random2.generator, std.random2.traits;
 
 import std.conv, std.exception, std.math, std.range, std.traits;
 import std.string : format;
