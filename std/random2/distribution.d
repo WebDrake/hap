@@ -2,9 +2,7 @@ module std.random2.distribution;
 
 import std.random2.generator, std.random2.traits;
 
-import std.conv, std.exception, std.math, std.range, std.traits;
-import std.string : format;
-version(unittest) { import std.typetuple; }
+import std.traits;
 
 /**
 Generates a number between $(D a) and $(D b). The $(D boundaries)
@@ -67,6 +65,7 @@ auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
             (T1 a, T2 b, ref UniformRNG urng)
     if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
 {
+    import std.exception, std.math, std.string : format;
     alias Unqual!(CommonType!(T1, T2)) NumberType;
     static if (boundaries[0] == '(')
     {
@@ -100,6 +99,7 @@ auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
     if ((isIntegral!(CommonType!(T1, T2)) || isSomeChar!(CommonType!(T1, T2)))
         && isUniformRNG!UniformRNG)
 {
+    import std.conv, std.exception, std.string : format;
     alias Unqual!(CommonType!(T1, T2)) ResultType;
     // We handle the case "[)' as the common case, and we adjust all
     // other cases to fit it.
@@ -150,6 +150,7 @@ auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
 
 unittest
 {
+    import std.conv, std.range, std.typetuple;
     auto gen = new Mt19937(unpredictableSeed);
     static assert(isForwardRange!(typeof(gen)));
 
@@ -204,6 +205,7 @@ auto uniform(T)()
 
 unittest
 {
+    import std.typetuple;
     foreach(T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
                           int, uint, long, ulong))
     {

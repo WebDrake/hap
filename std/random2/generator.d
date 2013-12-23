@@ -2,8 +2,7 @@ module std.random2.generator;
 
 import std.random2.traits;
 
-import std.algorithm, std.conv, std.exception, std.range, std.traits, std.typetuple, core.thread;
-import std.string : format;
+import std.range, std.traits, std.typetuple;
 
 /// $(D TypeTuple) of all uniform RNGs defined in this module.
 alias UniformRNGTypes =
@@ -31,6 +30,8 @@ ref Random rndGen() @property
 
     if (result is null)
     {
+        import std.algorithm;
+
         result = new Random;
 
         static if (isSeedable!(Random, typeof(repeat(0).map!((a) => unpredictableSeed))))
@@ -217,6 +218,7 @@ unittest
     {
         static if (c == 0)
         {
+            import std.exception, std.string : format;
             enforce(x0, format("Invalid (zero) seed for %s", typeof(this).stringof));
         }
         _x = m ? (x0 % m) : x0;
@@ -415,7 +417,7 @@ final class MersenneTwisterEngine(UIntType,
 
     /// Largest generated value
     enum UIntType max =
-        w == UIntType.sizeof * 8 ? UIntType.max : (to!UIntType(1) << w) - 1;
+        w == UIntType.sizeof * 8 ? UIntType.max : ((cast(UIntType) 1) << w) - 1;
 
     /// Default seed value
     enum UIntType defaultSeed = 5489U;
@@ -455,6 +457,7 @@ final class MersenneTwisterEngine(UIntType,
         mti = n;
         if (range.empty && j < n)
         {
+            import std.exception, std.string : format;
             throw new Exception(format("%s.seed: Input range only provided %s elements, "
                                        "need at least %s.", typeof(this).stringof, j, n));
         }
@@ -629,6 +632,8 @@ unittest
 
 unittest
 {
+    import std.algorithm, std.exception;
+
     foreach (MtGen; TypeTuple!(Mt11213b, Mt19937))
     {
         assert(isUniformRNG!(MtGen, uint));
@@ -962,6 +967,8 @@ unittest
  */
 uint unpredictableSeed() @property
 {
+    import core.thread;
+
     static MinstdRand0 rand = null;
 
     if (rand is null)

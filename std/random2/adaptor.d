@@ -1,8 +1,8 @@
 module std.random2.adaptor;
 
-import std.random2.distribution, std.random2.generator, std.random2.traits;
+import std.random2.generator, std.random2.traits;
 
-import std.algorithm, std.exception, std.math, std.range, std.traits;
+import std.range, std.traits;
 
 // dice
 /**
@@ -48,6 +48,7 @@ size_t dice(Num)(Num[] proportions...)
 private size_t diceImpl(RandomGen, Range)(ref RandomGen rng, Range proportions)
     if (isUniformRNG!RandomGen && isForwardRange!Range && isNumeric!(ElementType!Range))
 {
+    import std.algorithm, std.exception, std.random2.distribution;
     double sum = reduce!("(assert(b >= 0), a + b)")(0.0, proportions.save);
     enforce(sum > 0, "Proportions in a dice cannot sum to zero");
     immutable point = uniform(0.0, sum, rng);
@@ -177,6 +178,7 @@ final class RandomCover(Range, RandomGen)
             }
 
             // Roll a dice with k faces
+            import std.random2.distribution;
             auto chooseMe = uniform(0, k, _rng) == 0;
             assert(k > 1 || chooseMe);
 
@@ -236,7 +238,7 @@ auto randomCover(Range)(Range r)
 
 unittest
 {
-    import std.typetuple;
+    import std.algorithm, std.string, std.typetuple;
 
     int[] a = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
 
@@ -320,6 +322,7 @@ final class RandomSample(Range, RandomGen)
     if (isInputRange!Range && isUniformRNG!RandomGen)
 {
   private:
+    import std.random2.distribution;
     enum ushort _alphaInverse = 13; // Vitter's recommended value.
     enum Skip { None, A, D };
     size_t _available, _toSelect, _index;
@@ -432,6 +435,8 @@ final class RandomSample(Range, RandomGen)
      */
     size_t skipD()
     {
+        import std.math;
+
         // Confirm that the check in Step D1 is valid and we
         // haven't been sent here by mistake
         assert((_alphaInverse * _toSelect) <= _available);
@@ -527,6 +532,7 @@ final class RandomSample(Range, RandomGen)
 
     this(Range input, size_t howMany, size_t total, RandomGen rng)
     {
+        import std.exception, std.string : format;
         _input = input;
         _rng = rng;
         _available = total;
@@ -740,6 +746,7 @@ unittest
         /* Check that randomSample will throw an error if we claim more
          * items are available than there actually are, or if we try to
          * sample more items than are available. */
+        import std.exception;
         assert(collectExceptionMsg(randomSample(a, 5, 15)) == "RandomSample: specified 15 items as available when input contains only 10");
         assert(collectExceptionMsg(randomSample(a, 15)) == "RandomSample: cannot sample 15 items when only 10 are available");
         assert(collectExceptionMsg(randomSample(a, 9, 8)) == "RandomSample: cannot sample 9 items when only 8 are available");
@@ -919,6 +926,7 @@ unittest
              * test should at least highlight any extreme biases and could be
              * backed up by a hardcore external random test suite.
              */
+            import std.string : format;
             assert(count1 < 300, format("1: %s > 300.", count1));
             assert(4_700 < count99, format("99: %s <= 4700.", count99));
             assert(count99 < 5_300, format("99: %s >= 5300.", count99));
@@ -1002,6 +1010,7 @@ unittest
 void partialShuffle(Range, RandomGen)(Range r, in size_t n, ref RandomGen gen)
     if(isRandomAccessRange!Range && isUniformRNG!RandomGen)
 {
+    import std.algorithm, std.exception, std.random2.distribution;
     enforce(n <= r.length, "n must be <= r.length for partialShuffle.");
     foreach (i; 0 .. n)
     {
