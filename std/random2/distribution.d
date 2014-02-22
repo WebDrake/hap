@@ -225,6 +225,8 @@ final class UniformDistribution(string boundaries = "[)", T, UniformRNG)
     T value;
 
   public:
+    enum bool isRandomDistribution = true;
+
     immutable T min;
     immutable T max;
 
@@ -289,6 +291,9 @@ auto uniformDistribution(string boundaries = "[)", T1, T2)
 unittest
 {
     import std.stdio;
+
+    static assert(isRandomDistribution!(UniformDistribution!("[)", int, Random)));
+    static assert(isRandomDistribution!(UniformDistribution!("(]", double, Random)));
 
     auto udist = uniformDistribution(3.2, 5.9);
 

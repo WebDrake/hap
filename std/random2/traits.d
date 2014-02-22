@@ -149,3 +149,94 @@ unittest
     assert(!seedRng.front);
 }
 
+
+/**
+ * Test if $(D RandomDist) is a random distribution. The overload
+ * taking an $(D ElementType) also makes sure that the distribution
+ * generates values of that type.
+ *
+ * A random distribution has at least the following features:
+ * $(UL
+ *   $(LI it's an InputRange)
+ *   $(LI it has a $(D bool isRandomDistribution) field readable
+ *        in CTFE)
+ * )
+ */
+template isRandomDistribution(RandomDist, ElementType)
+{
+    enum bool isRandomDistribution = isInputRange!RandomDist &&
+        is(typeof(RandomDist.front) == ElementType) &&
+        is(typeof(
+        {
+            static assert(RandomDist.isRandomDistribution); //tag
+        }));
+}
+
+/// ditto
+template isRandomDistribution(RandomDist)
+{
+    enum bool isRandomDistribution = isInputRange!RandomDist &&
+        is(typeof(
+        {
+            static assert(RandomDist.isRandomDistribution); //tag
+        }));
+}
+
+unittest
+{
+    struct NoDist
+    {
+        @property uint front() {return 0;}
+        @property bool empty() {return false;}
+        void popFront() {}
+    }
+    static assert(!isRandomDistribution!(NoDist, uint));
+    static assert(!isRandomDistribution!(NoDist));
+    NoDist noDist;
+    noDist.popFront();
+    assert(!noDist.empty);
+    assert(!noDist.front);
+
+    struct NoDist2
+    {
+        @property uint front() {return 0;}
+        @property bool empty() {return false;}
+        void popFront() {}
+
+        enum isRandomDistribution = false;
+    }
+    static assert(!isRandomDistribution!(NoDist2, uint));
+    static assert(!isRandomDistribution!(NoDist2));
+    NoDist2 noDist2;
+    noDist2.popFront();
+    assert(!noDist2.empty);
+    assert(!noDist2.front);
+
+    struct NoDist3
+    {
+        @property bool empty() {return false;}
+        void popFront() {}
+
+        enum isRandomDistribution = true;
+    }
+    static assert(!isRandomDistribution!(NoDist3, uint));
+    static assert(!isRandomDistribution!(NoDist3));
+    NoDist3 noDist3;
+    noDist3.popFront();
+    assert(!noDist3.empty);
+
+    struct ValidDist
+    {
+        @property uint front() {return 0;}
+        @property bool empty() {return false;}
+        void popFront() {}
+
+        enum isRandomDistribution = true;
+    }
+    static assert(isRandomDistribution!(ValidDist, uint));
+    static assert(isRandomDistribution!(ValidDist));
+    ValidDist validDist;
+    validDist.popFront();
+    assert(!validDist.empty);
+    assert(!validDist.front);
+}
