@@ -2,7 +2,7 @@ module std.random2.distribution;
 
 import std.random2.generator, std.random2.traits;
 
-import std.traits;
+import std.range, std.traits;
 
 /**
 Generates a number between $(D a) and $(D b). The $(D boundaries)
@@ -150,7 +150,7 @@ auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
 
 unittest
 {
-    import std.conv, std.range, std.typetuple;
+    import std.conv, std.typetuple;
     auto gen = new Mt19937(unpredictableSeed);
     static assert(isForwardRange!(typeof(gen)));
 
@@ -215,4 +215,93 @@ unittest
         assert(i > 0);
         assert(i < 50);
     }
+}
+
+final class UniformDistribution(string boundaries = "[)", T, UniformRNG)
+    if (isNumeric!T && isUniformRNG!UniformRNG)
+{
+  private:
+    UniformRNG _rng;
+    T value;
+
+  public:
+    immutable T min;
+    immutable T max;
+
+    this(T a, T b, UniformRNG rng)
+    {
+        import std.exception;
+        enforce(a < b);
+        min = a;
+        max = b;
+        _rng = rng;
+        popFront();
+    }
+
+    this(typeof(this) that)
+    {
+        this(that.min, that.max, that._rng);
+    }
+
+    /// Range primitives.
+    enum bool empty = false;
+
+    /// ditto
+    T front() @property @safe const nothrow pure
+    {
+        return value;
+    }
+
+    /// ditto
+    void popFront()
+    {
+        value = uniform!(boundaries, T, T, UniformRNG)(min, max, _rng);
+    }
+
+    /// ditto
+    static if (isForwardRange!UniformRNG)
+    {
+        typeof(this) save() @property
+        {
+            auto ret = new typeof(this)(this);
+            ret._rng = this._rng.save;
+            return ret;
+        }
+    }
+}
+
+auto uniformDistribution(string boundaries = "[)", T1, T2, UniformRNG)
+                        (T1 a, T2 b, ref UniformRNG rng)
+    if (isNumeric!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
+{
+    alias T = CommonType!(T1, T2);
+    return new UniformDistribution!(boundaries, T, UniformRNG)(a, b, rng);
+}
+
+auto uniformDistribution(string boundaries = "[)", T1, T2)
+                        (T1 a, T2 b)
+    if (isNumeric!(CommonType!(T1, T2)))
+{
+    alias T = CommonType!(T1, T2);
+    return new UniformDistribution!(boundaries, T, Random)(a, b, rndGen);
+}
+
+unittest
+{
+    import std.stdio;
+
+    auto udist = uniformDistribution(3.2, 5.9);
+
+    foreach (u; udist.take(100))
+    {
+        writeln("U(", udist.min, ", ", udist.max, ") = ", u);
+        assert(udist.min <= u);
+        assert(u <= udist.max);
+    }
+
+    auto udist2 = udist.save;
+    udist.popFrontN(20);
+    assert(udist2.front != udist.front);
+    udist2.popFrontN(20);
+    assert(udist2.front == udist.front);
 }
