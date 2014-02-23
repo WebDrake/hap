@@ -311,3 +311,171 @@ unittest
     udist2.popFrontN(20);
     assert(udist2.front == udist.front);
 }
+
+final class NormalDistribution(T, UniformRNG)
+    if (isFloatingPoint!T && isUniformRNG!UniformRNG)
+{
+  private:
+    alias NormalEngine = NormalEngineBoxMuller;
+    NormalEngine!T _engine;
+    UniformRNG _rng;
+    T _value;
+
+  public:
+    enum bool isRandomDistribution = true;
+    immutable T mean;
+    immutable T stdev;
+
+    this(T mu, T sigma, UniformRNG rng)
+    {
+        import std.exception;
+        enforce(sigma > 0);
+        mean = mu;
+        stdev = sigma;
+        _rng = rng;
+
+        static if (is(typeof(_engine.initialize())))
+        {
+            _engine.initialize();
+        }
+
+        popFront();
+    }
+
+    this(typeof(this) that)
+    {
+        this(that.mean, that.stdev, that._rng);
+    }
+
+    /// Range primitives.
+    enum bool empty = false;
+
+    /// ditto
+    T front() @property @safe const nothrow pure
+    {
+        return _value;
+    }
+
+    /// ditto
+    void popFront()
+    {
+        _value = this.stdev * _engine(_rng) + this.mean;
+    }
+
+    /// ditto
+    static if (isForwardRange!UniformRNG)
+    {
+        typeof(this) save() @property
+        {
+            auto ret = new typeof(this)(this);
+            ret._rng = this._rng.save;
+            return ret;
+        }
+    }
+}
+
+auto normalDistribution(T1, T2, UniformRNG)
+                       (T1 mu, T2 sigma, UniformRNG rng)
+    if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
+{
+    alias T = CommonType!(T1, T2);
+    return new NormalDistribution!(T, UniformRNG)(mu, sigma, rng);
+}
+
+auto normalDistribution(T1, T2)
+                       (T1 mu, T2 sigma)
+    if (isFloatingPoint!(CommonType!(T1, T2)))
+{
+    alias T = CommonType!(T1, T2);
+    return new NormalDistribution!(T, Random)(mu, sigma, rndGen);
+}
+
+unittest
+{
+    import std.stdio;
+    auto rng = new Mt19937(54321);
+    auto ndist = normalDistribution(3.0, 10.0, rng);
+
+    static assert(isRandomDistribution!(typeof(ndist)));
+
+    writeln("----------------------------");
+    writeln("N(3, 10):");
+
+    foreach(val; ndist.take(10))
+    {
+        writefln("%.80g", val);
+    }
+    writeln("----------------------------");
+
+    auto ndist2 = ndist.save;
+    static assert(isRandomDistribution!(typeof(ndist2)));
+    assert(ndist2 !is ndist);
+    ndist.popFrontN(20);
+    assert(ndist2.front != ndist.front);
+    ndist2.popFrontN(20);
+    assert(ndist2.front == ndist.front);
+
+    auto ndist3 = normalDistribution(5.0, 7.0);
+    static assert(isRandomDistribution!(typeof(ndist3)));
+    writeln("----------------------------");
+    writeln("N(5, 7):");
+
+    foreach(val; ndist3.take(10))
+    {
+        writefln("%.80g", val);
+    }
+    writeln("----------------------------");
+
+}
+
+private struct NormalEngineBoxMuller(T)
+    if (isFloatingPoint!T)
+{
+  private:
+    bool _valid = false;
+    T _rho, _r1, _r2;
+
+  public:
+    T opCall(UniformRNG)(ref UniformRNG rng)
+        if (isUniformRNG!UniformRNG)
+    {
+        import std.math;
+
+        _valid = !_valid;
+
+        if (_valid)
+        {
+            /* N.B. Traditional Box-Muller asks for random numbers
+             * in (0, 1], which uniform() can readily supply.  We
+             * instead generate numbers in [0, 1) and use 1 - num
+             * to match the output of Boost.Random.
+             */
+            _r1 = uniform!("[)", T, T, UniformRNG)(0, 1, rng);
+            _r2 = uniform!("[)", T, T, UniformRNG)(0, 1, rng);
+            _rho = sqrt(-2 * log(1 - _r2));
+
+            return _rho * cos(2 * PI * _r1);
+        }
+        else
+        {
+            return _rho * sin(2 * PI * _r1);
+        }
+    }
+}
+
+unittest
+{
+    import std.stdio;
+
+    auto rng = new Mt19937(54321);
+    NormalEngineBoxMuller!double norm;
+
+    writeln("----------------------------");
+    writeln("N(0, 1):");
+
+    foreach(_; 0 .. 10)
+    {
+        writefln("%.80g", norm(rng));
+    }
+    writeln("----------------------------");
+}
