@@ -222,7 +222,7 @@ final class UniformDistribution(string boundaries = "[)", T, UniformRNG)
 {
   private:
     UniformRNG _rng;
-    T value;
+    T _value;
 
   public:
     enum bool isRandomDistribution = true;
@@ -251,13 +251,13 @@ final class UniformDistribution(string boundaries = "[)", T, UniformRNG)
     /// ditto
     T front() @property @safe const nothrow pure
     {
-        return value;
+        return _value;
     }
 
     /// ditto
     void popFront()
     {
-        value = uniform!(boundaries, T, T, UniformRNG)(min, max, _rng);
+        _value = uniform!(boundaries, T, T, UniformRNG)(min, max, _rng);
     }
 
     /// ditto
@@ -305,6 +305,7 @@ unittest
     }
 
     auto udist2 = udist.save;
+    assert(udist2 !is udist);
     udist.popFrontN(20);
     assert(udist2.front != udist.front);
     udist2.popFrontN(20);
