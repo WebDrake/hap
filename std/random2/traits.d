@@ -1,3 +1,19 @@
+// Written in the D programming language.
+
+/**
+ * Implements compile-time checks for different features of random
+ * number generating code.
+ *
+ * Copyright: © 2008-2011 Andrei Alexandrescu,
+ *              2014      Joseph Rushton Wakeling
+ *
+ * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ *
+ * Authors: $(WEB erdani.org, Andrei Alexandrescu),
+ *          $(WEB braingam.es, Joseph Rushton Wakeling)
+ *
+ * Source: $(PHOBOSSRC std/random2/_traits.d)
+ */
 module std.random2.traits;
 
 import std.range;

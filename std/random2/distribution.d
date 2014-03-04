@@ -1,3 +1,34 @@
+// Written in the D programming language.
+
+/**
+ * Implements algorithms for generating random numbers drawn from
+ * different statistical distributions.  Where possible, each random
+ * distribution is provided in two different forms:
+ *
+ * $(UL
+ *   $(LI as a function, which takes as input the distribution
+ *        parameters and a uniform RNG, and returns a single value
+ *        drawn from the distribution, and)
+ *   $(LI as a range object, which wraps a uniform RNG instance and
+ *        transforms its output into numbers drawn from the specified
+ *        distribution.)
+ * )
+ *
+ * As with random number generators, the random distribution range
+ * objects implemented here are final classes in order to ensure
+ * reference semantics.  They also assume reference type semantics on
+ * the part of the RNGs that they wrap: user-supplied value-type RNGs
+ * may produce unexpected and incorrect behaviour when combined with
+ * these objects.
+ *
+ * Copyright: © 2014 Joseph Rushton Wakeling
+ *
+ * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ *
+ * Authors: $(WEB braingam.es, Joseph Rushton Wakeling)
+ *
+ * Source: $(PHOBOSSRC std/random2/_distribution.d)
+ */
 module std.random2.distribution;
 
 import std.random2.generator, std.random2.traits;

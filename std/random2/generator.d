@@ -1,3 +1,35 @@
+// Written in the D programming language.
+
+/**
+ * Implements algorithms for uniform pseudo-random number generation.
+ * By analogy to the definition used in the C++11 Standard Template
+ * Library $(D $(LESS)_random$(GREATER)) header, a $(I uniform random
+ * number generator) is defined to be an Input Range whose values are
+ * unsigned integer values such that each value among the possible set
+ * of results has (ideally) equal probability of being next in the
+ * sequence.  Pseudo-random number generators are typically implemented
+ * as Forward Ranges, but this is not a requirement.
+ *
+ * The uniform random number generators provided by this module are
+ * implemented as final classes to ensure reference type semantics.
+ * These semantics are assumed by all other functions in the package,
+ * so user-defined value-type RNGs may fail in unexpected ways.
+ *
+ * Non-deterministic random number generators, or $(I random devices),
+ * are provided in a separate module.
+ *
+ * Copyright: © 2008-2011 Andrei Alexandrescu,
+ *              2011      Masahiro Nakagawa,
+ *              2012-2014 Joseph Rushton Wakeling
+ *
+ * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ *
+ * Authors: $(WEB erdani.org, Andrei Alexandrescu),
+ *          Masahiro Nakagawa (Xorshift random generator),
+ *          $(WEB braingam.es, Joseph Rushton Wakeling)
+ *
+ * Source: $(PHOBOSSRC std/random2/_generator.d)
+ */
 module std.random2.generator;
 
 import std.random2.traits;

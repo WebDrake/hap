@@ -1,3 +1,28 @@
+// Written in the D programming language.
+
+/**
+ * Implements algorithms that transform the output of uniform random
+ * number generators into other random behaviours, such as shuffling,
+ * sampling, and so on.  Typically these are implemented as range
+ * objects that wrap a provided RNG instance.
+ *
+ * As with the random number generators provided elsewhere in this
+ * package, the range objects implemented here are implemented as final
+ * classes to enforce reference semantics.  They also assume that the
+ * RNGs they make use of have reference type semantics.  User-supplied
+ * value-type RNGs may result in incorrect behaviour when used with
+ * these objects.
+ *
+ * Copyright: © 2008-2011 Andrei Alexandrescu,
+ *              2012-2014 Joseph Rushton Wakeling
+ *
+ * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ *
+ * Authors: $(WEB erdani.org, Andrei Alexandrescu),
+ *          $(WEB braingam.es, Joseph Rushton Wakeling)
+ *
+ * Source: $(PHOBOSSRC std/random2/_adaptor.d)
+ */
 module std.random2.adaptor;
 
 import std.random2.generator, std.random2.traits;
