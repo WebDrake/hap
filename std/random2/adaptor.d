@@ -31,17 +31,17 @@ import std.range, std.traits;
 
 // dice
 /**
-Rolls a random die with relative probabilities stored in $(D proportions).
-Returns the index in $(D proportions) that was chosen.
-
-Example:
-----
-auto x = dice(0.5, 0.5);   // x is 0 or 1 in equal proportions
-auto y = dice(50, 50);     // y is 0 or 1 in equal proportions
-auto z = dice(70, 20, 10); // z is 0 70% of the time, 1 20% of the time,
-                           // and 2 10% of the time
-----
-*/
+ * Rolls a random die with relative probabilities stored in $(D proportions).
+ * Returns the index in $(D proportions) that was chosen.
+ *
+ * Example:
+ * ----
+ * auto x = dice(0.5, 0.5);   // x is 0 or 1 in equal proportions
+ * auto y = dice(50, 50);     // y is 0 or 1 in equal proportions
+ * auto z = dice(70, 20, 10); // z is 0 70% of the time, 1 20% of the time,
+ *                            // and 2 10% of the time
+ * ----
+ */
 size_t dice(RandomGen, Num)(ref RandomGen rng, Num[] proportions...)
     if (isNumeric!Num && isForwardRange!RandomGen)
 {

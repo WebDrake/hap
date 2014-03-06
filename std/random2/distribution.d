@@ -36,22 +36,22 @@ import std.random2.generator, std.random2.traits;
 import std.range, std.traits;
 
 /**
-Generates a number between $(D a) and $(D b). The $(D boundaries)
-parameter controls the shape of the interval (open vs. closed on
-either side). Valid values for $(D boundaries) are $(D "[]"), $(D
-"$(LPAREN)]"), $(D "[$(RPAREN)"), and $(D "()"). The default interval
-is closed to the left and open to the right. The version that does not
-take $(D urng) uses the default generator $(D rndGen).
-
-Example:
-
-----
-auto gen = Random(unpredictableSeed);
-// Generate an integer in [0, 1023]
-auto a = uniform(0, 1024, gen);
-// Generate a float in [0, 1$(RPAREN)
-auto a = uniform(0.0f, 1.0f, gen);
-----
+ * Generates a number between $(D a) and $(D b). The $(D boundaries)
+ * parameter controls the shape of the interval (open vs. closed on
+ * either side). Valid values for $(D boundaries) are $(D "[]"), $(D
+ * "$(LPAREN)]"), $(D "[$(RPAREN)"), and $(D "()"). The default interval
+ * is closed to the left and open to the right. The version that does not
+ * take $(D urng) uses the default generator $(D rndGen).
+ *
+ * Example:
+ *
+ * ----
+ * auto gen = Random(unpredictableSeed);
+ * // Generate an integer in [0, 1023]
+ * auto a = uniform(0, 1024, gen);
+ * // Generate a float in [0, 1$(RPAREN)
+ * auto a = uniform(0.0f, 1.0f, gen);
+ * ----
  */
 auto uniform(string boundaries = "[)", T1, T2)
             (T1 a, T2 b)
@@ -125,6 +125,7 @@ auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
 }
 
 // Implementation of uniform for integral types
+/// ditto
 auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
             (T1 a, T2 b, ref UniformRNG urng)
     if ((isIntegral!(CommonType!(T1, T2)) || isSomeChar!(CommonType!(T1, T2)))
@@ -204,9 +205,9 @@ unittest
 }
 
 /**
-Generates a uniformly-distributed number in the range $(D [T.min,
-T.max]) for any integral type $(D T). If no random number generator is
-passed, uses the default $(D rndGen).
+ * Generates a uniformly-distributed number in the range $(D [T.min, T.max])
+ * for any integral type $(D T). If no random number generator is passed,
+ * uses the default $(D rndGen).
  */
 auto uniform(T, UniformRNG)(ref UniformRNG urng)
     if (!is(T == enum) && (isIntegral!T || isSomeChar!T)
@@ -227,7 +228,7 @@ auto uniform(T, UniformRNG)(ref UniformRNG urng)
     }
 }
 
-/// Ditto
+/// ditto
 auto uniform(T)()
     if (!is(T == enum) && (isIntegral!T || isSomeChar!T))
 {
@@ -248,6 +249,15 @@ unittest
     }
 }
 
+/**
+ * Provides an infinite sequence of random numbers uniformly distributed between
+ * $(D a) and $(D b).  The $(D boundaries) parameter controls the shape of the
+ * interval (open vs. closed on either side).  Valid values for $(D boundaries)
+ * are $(D "[]"), $(D "$(LPAREN)]"), $(D "[$(RPAREN)"), and $(D "()"). The
+ * default interval is closed to the left and open to the right. The version
+ * that does not receive a specified random number generator uses the default
+ * generator $(D rndGen).
+ */
 final class UniformDistribution(string boundaries = "[)", T, UniformRNG)
     if (isNumeric!T && isUniformRNG!UniformRNG)
 {
@@ -303,6 +313,7 @@ final class UniformDistribution(string boundaries = "[)", T, UniformRNG)
     }
 }
 
+/// ditto
 auto uniformDistribution(string boundaries = "[)", T1, T2, UniformRNG)
                         (T1 a, T2 b, ref UniformRNG rng)
     if (isNumeric!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
@@ -311,6 +322,7 @@ auto uniformDistribution(string boundaries = "[)", T1, T2, UniformRNG)
     return new UniformDistribution!(boundaries, T, UniformRNG)(a, b, rng);
 }
 
+/// ditto
 auto uniformDistribution(string boundaries = "[)", T1, T2)
                         (T1 a, T2 b)
     if (isNumeric!(CommonType!(T1, T2)))
@@ -343,6 +355,13 @@ unittest
     assert(udist2.front == udist.front);
 }
 
+/**
+ * Provides an infinite range of random numbers distributed according to the
+ * normal (Gaussian) distribution with mean $(D mu) and standard deviation
+ * $(D sigma).  The version that does not receive a specified random number
+ * generator uses the default generator $(D rndGen) as its source of
+ * randomness.
+ */
 final class NormalDistribution(T, UniformRNG)
     if (isFloatingPoint!T && isUniformRNG!UniformRNG)
 {
@@ -405,6 +424,7 @@ final class NormalDistribution(T, UniformRNG)
     }
 }
 
+/// ditto
 auto normalDistribution(T1, T2, UniformRNG)
                        (T1 mu, T2 sigma, UniformRNG rng)
     if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
@@ -413,6 +433,7 @@ auto normalDistribution(T1, T2, UniformRNG)
     return new NormalDistribution!(T, UniformRNG)(mu, sigma, rng);
 }
 
+/// ditto
 auto normalDistribution(T1, T2)
                        (T1 mu, T2 sigma)
     if (isFloatingPoint!(CommonType!(T1, T2)))
@@ -459,6 +480,14 @@ unittest
 
 }
 
+/**
+ * Generates random numbers drawn from a normal (Gaussian) distribution with
+ * mean 0 and standard deviation 1, using the Box-Muller Transform method.
+ *
+ * This implementation of Box-Muller closely follows that of its counterpart
+ * in the Boost.Random C++ library and should produce matching results aside
+ * from discrepancies that arise out of differences in floating-point precision.
+ */
 private struct NormalEngineBoxMuller(T)
     if (isFloatingPoint!T)
 {
