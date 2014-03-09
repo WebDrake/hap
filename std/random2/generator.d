@@ -948,7 +948,7 @@ unittest
  * n = rng.front;  // different across runs
  * -----
  */
-alias XorshiftEngine!(uint, 32,  13, 17, 15)  Xorshift32;
+alias XorshiftEngine!(uint, 32,  13, 17, 15) Xorshift32;
 alias XorshiftEngine!(uint, 64,  10, 13, 10) Xorshift64;   /// ditto
 alias XorshiftEngine!(uint, 96,  10, 5,  26) Xorshift96;   /// ditto
 alias XorshiftEngine!(uint, 128, 11, 8,  19) Xorshift128;  /// ditto
