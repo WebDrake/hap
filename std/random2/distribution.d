@@ -35,6 +35,85 @@ import std.random2.generator, std.random2.traits;
 
 import std.range, std.traits;
 
+// dice
+/**
+ * Rolls a random die with relative probabilities stored in $(D proportions).
+ * Returns the index in $(D proportions) that was chosen.
+ *
+ * Example:
+ * ----
+ * auto x = dice(0.5, 0.5);   // x is 0 or 1 in equal proportions
+ * auto y = dice(50, 50);     // y is 0 or 1 in equal proportions
+ * auto z = dice(70, 20, 10); // z is 0 70% of the time, 1 20% of the time,
+ *                            // and 2 10% of the time
+ * ----
+ *
+ * The range counterpart of $(D dice) is the $(DiscreteDistribution) class.
+ */
+size_t dice(RandomGen, Num)(ref RandomGen rng, Num[] proportions...)
+    if (isNumeric!Num && isForwardRange!RandomGen)
+{
+    return diceImpl(rng, proportions);
+}
+
+/// ditto
+size_t dice(RandomGen, Range)(ref RandomGen rng, Range proportions)
+    if (isUniformRNG!RandomGen && isForwardRange!Range &&
+        isNumeric!(ElementType!Range) && !isArray!Range)
+{
+    return diceImpl(rng, proportions);
+}
+
+/// ditto
+size_t dice(Range)(Range proportions)
+    if (isForwardRange!Range && isNumeric!(ElementType!Range) && !isArray!Range)
+{
+    return diceImpl(rndGen, proportions);
+}
+
+/// ditto
+size_t dice(Num)(Num[] proportions...)
+    if (isNumeric!Num)
+{
+    return diceImpl(rndGen, proportions);
+}
+
+private size_t diceImpl(RandomGen, Range)(ref RandomGen rng, Range proportions)
+    if (isUniformRNG!RandomGen && isForwardRange!Range && isNumeric!(ElementType!Range))
+{
+    import std.algorithm, std.exception, std.random2.distribution;
+    double sum = reduce!("(assert(b >= 0), a + b)")(0.0, proportions.save);
+    enforce(sum > 0, "Proportions in a dice cannot sum to zero");
+    immutable point = uniform(0.0, sum, rng);
+    assert(point < sum);
+    auto mass = 0.0;
+
+    size_t i = 0;
+    foreach (e; proportions)
+    {
+        mass += e;
+        if (point < mass)
+        {
+            return i;
+        }
+        i++;
+    }
+    // this point should not be reached
+    assert(false);
+}
+
+unittest
+{
+    auto gen = new Random(unpredictableSeed);
+    auto i = dice(gen, 0.0, 100.0);
+    assert(i == 1);
+    i = dice(gen, 100.0, 0.0);
+    assert(i == 0);
+
+    i = dice(100U, 0U);
+    assert(i == 0);
+}
+
 /**
  * Generates a number between $(D a) and $(D b). The $(D boundaries)
  * parameter controls the shape of the interval (open vs. closed on
