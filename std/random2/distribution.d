@@ -488,7 +488,7 @@ final class NormalDistribution(T, UniformRNG)
     /// ditto
     void popFront()
     {
-        _value = this.stdev * _engine(_rng) + this.mean;
+        _value = _engine(this.mean, this.stdev, _rng);
     }
 
     /// ditto
@@ -560,8 +560,8 @@ unittest
 }
 
 /**
- * Generates random numbers drawn from a normal (Gaussian) distribution with
- * mean 0 and standard deviation 1, using the Box-Muller Transform method.
+ * Generates random numbers drawn from a normal (Gaussian) distribution, using
+ * the Box-Muller Transform method.
  *
  * This implementation of Box-Muller closely follows that of its counterpart
  * in the Boost.Random C++ library and should produce matching results aside
@@ -575,7 +575,12 @@ private struct NormalEngineBoxMuller(T)
     T _rho, _r1, _r2;
 
   public:
-    T opCall(UniformRNG)(ref UniformRNG rng)
+    /**
+     * Generates a single random number drawn from a normal distribution with
+     * mean $(D mu) and standard deviation $(D sigma), using $(D rng) as the
+     * source of randomness.
+     */
+    T opCall(UniformRNG)(in T mu, in T sigma, ref UniformRNG rng)
         if (isUniformRNG!UniformRNG)
     {
         import std.math;
@@ -593,11 +598,11 @@ private struct NormalEngineBoxMuller(T)
             _r2 = uniform!("[)", T, T, UniformRNG)(0, 1, rng);
             _rho = sqrt(-2 * log(1 - _r2));
 
-            return _rho * cos(2 * PI * _r1);
+            return _rho * cos(2 * PI * _r1) * sigma + mu;
         }
         else
         {
-            return _rho * sin(2 * PI * _r1);
+            return _rho * sin(2 * PI * _r1) * sigma + mu;
         }
     }
 }
@@ -614,7 +619,7 @@ unittest
 
     foreach(_; 0 .. 10)
     {
-        writefln("%.80g", norm(rng));
+        writefln("%.80g", norm(0.0, 1.0, rng));
     }
     writeln("----------------------------");
 }
