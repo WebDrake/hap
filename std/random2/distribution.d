@@ -462,12 +462,6 @@ final class NormalDistribution(T, UniformRNG)
         mean = mu;
         stdev = sigma;
         _rng = rng;
-
-        static if (is(typeof(_engine.initialize())))
-        {
-            _engine.initialize();
-        }
-
         popFront();
     }
 
@@ -506,19 +500,26 @@ final class NormalDistribution(T, UniformRNG)
 /// ditto
 auto normalDistribution(T1, T2, UniformRNG)
                        (T1 mu, T2 sigma, UniformRNG rng)
-    if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
+    if (isNumeric!T1 && isNumeric!T2 && isUniformRNG!UniformRNG)
 {
-    alias T = CommonType!(T1, T2);
+    static if (isFloatingPoint!(CommonType!(T1, T2)))
+    {
+        alias T = CommonType!(T1, T2);
+    }
+    else
+    {
+        alias T = double;
+    }
+
     return new NormalDistribution!(T, UniformRNG)(mu, sigma, rng);
 }
 
 /// ditto
 auto normalDistribution(T1, T2)
                        (T1 mu, T2 sigma)
-    if (isFloatingPoint!(CommonType!(T1, T2)))
+    if (isNumeric!T1 && isNumeric!T2)
 {
-    alias T = CommonType!(T1, T2);
-    return new NormalDistribution!(T, Random)(mu, sigma, rndGen);
+    return normalDistribution!(T1, T2, Random)(mu, sigma, rndGen);
 }
 
 unittest
