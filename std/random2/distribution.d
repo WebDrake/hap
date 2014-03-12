@@ -412,26 +412,98 @@ auto uniformDistribution(string boundaries = "[)", T1, T2)
 
 unittest
 {
-    import std.stdio;
-
     static assert(isRandomDistribution!(UniformDistribution!("[)", int, Random)));
     static assert(isRandomDistribution!(UniformDistribution!("(]", double, Random)));
 
-    auto udist = uniformDistribution(3.2, 5.9);
-
-    foreach (u; udist.take(100))
+    // check distribution boundaries function OK for floating-point
     {
-        writeln("U(", udist.min, ", ", udist.max, ") = ", u);
-        assert(udist.min <= u);
-        assert(u <= udist.max);
+        auto udist = uniformDistribution(3.2, 5.9);
+        foreach (u; udist.take(100))
+        {
+            assert(udist.min <= u);
+            assert(u < udist.max);
+        }
+    }
+    {
+        auto udist = uniformDistribution!"()"(5.7, 8.9);
+        foreach (u; udist.take(100))
+        {
+            assert(udist.min < u);
+            assert(u < udist.max);
+        }
+    }
+    {
+        auto udist = uniformDistribution!"(]"(3.7L, 9.2L);
+        foreach (u; udist.take(100))
+        {
+            assert(udist.min < u);
+            assert(u <= udist.max);
+        }
+    }
+    {
+        auto udist = uniformDistribution!"[]"(2.1, 9.9);
+        foreach (u; udist.take(100))
+        {
+            assert(udist.min <= u);
+            assert(u <= udist.max);
+        }
     }
 
-    auto udist2 = udist.save;
-    assert(udist2 !is udist);
-    udist.popFrontN(20);
-    assert(udist2.front != udist.front);
-    udist2.popFrontN(20);
-    assert(udist2.front == udist.front);
+    // check distribution boundaries function OK for integers
+    {
+        auto udist = uniformDistribution(0, 10);
+        size_t eqMin = 0;
+        foreach (u; udist.take(100))
+        {
+            assert(udist.min <= u);
+            assert(u < udist.max);
+            if (u == udist.min) ++eqMin;
+        }
+        assert(eqMin > 0);
+    }
+    {
+        auto udist = uniformDistribution!"()"(0, 10);
+        foreach (u; udist.take(100))
+        {
+            assert(udist.min < u);
+            assert(u < udist.max);
+        }
+    }
+    {
+        auto udist = uniformDistribution!"(]"(0, 10);
+        size_t eqMax = 0;
+        foreach (u; udist.take(100))
+        {
+            assert(udist.min < u);
+            assert(u <= udist.max);
+            if (u == udist.max) ++eqMax;
+        }
+        assert(eqMax > 0);
+    }
+    {
+        auto udist = uniformDistribution!"[]"(0, 10);
+        size_t eqMin = 0, eqMax = 0;
+        foreach (u; udist.take(100))
+        {
+            assert(udist.min <= u);
+            assert(u <= udist.max);
+            if (u == udist.min) ++eqMin;
+            if (u == udist.max) ++eqMax;
+        }
+        assert(eqMin > 0);
+        assert(eqMax > 0);
+    }
+
+    // check that save works properly
+    {
+        auto udist = uniformDistribution(1.1, 3.3);
+        auto udist2 = udist.save;
+        assert(udist2 !is udist);
+        udist.popFrontN(20);
+        assert(udist2.front != udist.front);
+        udist2.popFrontN(20);
+        assert(udist2.front == udist.front);
+    }
 }
 
 /**
@@ -524,40 +596,35 @@ auto normalDistribution(T1, T2)
 
 unittest
 {
-    import std.stdio;
-    auto rng = new Mt19937(54321);
-    auto ndist = normalDistribution(3.0, 10.0, rng);
-
-    static assert(isRandomDistribution!(typeof(ndist)));
-
-    writeln("----------------------------");
-    writeln("N(3, 10):");
-
-    foreach(val; ndist.take(10))
+    // check type rules for NormalDistribution
     {
-        writefln("%.80g", val);
+        auto ndist = normalDistribution(0, 1);
+        static assert(is(typeof(ndist.front) == double));
     }
-    writeln("----------------------------");
-
-    auto ndist2 = ndist.save;
-    static assert(isRandomDistribution!(typeof(ndist2)));
-    assert(ndist2 !is ndist);
-    ndist.popFrontN(20);
-    assert(ndist2.front != ndist.front);
-    ndist2.popFrontN(20);
-    assert(ndist2.front == ndist.front);
-
-    auto ndist3 = normalDistribution(5.0, 7.0);
-    static assert(isRandomDistribution!(typeof(ndist3)));
-    writeln("----------------------------");
-    writeln("N(5, 7):");
-
-    foreach(val; ndist3.take(10))
     {
-        writefln("%.80g", val);
+        auto ndist = normalDistribution(0.0f, 1);
+        static assert(is(typeof(ndist.front) == float));
     }
-    writeln("----------------------------");
+    {
+        auto ndist = normalDistribution(0.0, 1);
+        static assert(is(typeof(ndist.front) == double));
+    }
+    {
+        auto ndist = normalDistribution(0.0L, 1);
+        static assert(is(typeof(ndist.front) == real));
+    }
 
+    // check save works effectively
+    {
+        auto ndist = normalDistribution(3.29, 7.64);
+        auto ndist2 = ndist.save;
+        assert(ndist2 !is ndist);
+
+        ndist.popFrontN(10);
+        assert(ndist2.front != ndist.front);
+        ndist2.popFrontN(10);
+        assert(ndist2.front == ndist.front);
+    }
 }
 
 /**
@@ -610,17 +677,37 @@ private struct NormalEngineBoxMuller(T)
 
 unittest
 {
-    import std.stdio;
+    NormalEngineBoxMuller!double engine;
+    auto rng1 = new Random(unpredictableSeed);
+    auto rng2 = rng1.save;
+    auto rng3 = rng1.save;
+    double mu = 6.5, sigma = 3.2;
 
-    auto rng = new Mt19937(54321);
-    NormalEngineBoxMuller!double norm;
+    /* The Box-Muller engine produces variates a pair at
+     * a time.  We verify this is true by using a pair of
+     * pseudo-random number generators sharing the same
+     * initial state.
+     */
+    auto a1 = engine(mu, sigma, rng1);
+    auto b2 = engine(mu, sigma, rng2);
 
-    writeln("----------------------------");
-    writeln("N(0, 1):");
+    // verify that 1st RNG has been called but 2nd has not
+    assert(rng3.front != rng1.front);
+    assert(rng3.front == rng2.front);
 
-    foreach(_; 0 .. 10)
-    {
-        writefln("%.80g", norm(0.0, 1.0, rng));
-    }
-    writeln("----------------------------");
+    /* Now, calling with the RNG order reversed should
+     * produce the same results: only rng2 will get called
+     * this time.
+     */
+    auto a2 = engine(mu, sigma, rng2);
+    auto b1 = engine(mu, sigma, rng1);
+
+    assert(a1 == a2);
+    assert(b1 == b2);
+    assert(rng2.front == rng1.front);
+    assert(rng3.front != rng2.front);
+
+    // verify that the RNGs have each been called twice
+    rng3.popFrontN(2);
+    assert(rng3.front == rng2.front);
 }
