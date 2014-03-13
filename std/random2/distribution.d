@@ -115,6 +115,212 @@ unittest
 }
 
 /**
+ * Provides an infinite range of random numbers distributed according to the
+ * normal (Gaussian) distribution with mean $(D mu) and standard deviation
+ * $(D sigma).  The version that does not receive a specified random number
+ * generator uses the default generator $(D rndGen) as its source of
+ * randomness.
+ */
+final class NormalDistribution(T, UniformRNG)
+    if (isFloatingPoint!T && isUniformRNG!UniformRNG)
+{
+  private:
+    alias NormalEngine = NormalEngineBoxMuller;
+    NormalEngine!T _engine;
+    UniformRNG _rng;
+    T _value;
+
+  public:
+    enum bool isRandomDistribution = true;
+    immutable T mean;
+    immutable T stdev;
+
+    this(T mu, T sigma, UniformRNG rng)
+    {
+        import std.exception;
+        enforce(sigma > 0);
+        mean = mu;
+        stdev = sigma;
+        _rng = rng;
+        popFront();
+    }
+
+    this(typeof(this) that)
+    {
+        this(that.mean, that.stdev, that._rng);
+    }
+
+    /// Range primitives.
+    enum bool empty = false;
+
+    /// ditto
+    T front() @property @safe const nothrow pure
+    {
+        return _value;
+    }
+
+    /// ditto
+    void popFront()
+    {
+        _value = _engine(this.mean, this.stdev, _rng);
+    }
+
+    /// ditto
+    static if (isForwardRange!UniformRNG)
+    {
+        typeof(this) save() @property
+        {
+            auto ret = new typeof(this)(this);
+            ret._rng = this._rng.save;
+            return ret;
+        }
+    }
+}
+
+/// ditto
+auto normalDistribution(T1, T2, UniformRNG)
+                       (T1 mu, T2 sigma, UniformRNG rng)
+    if (isNumeric!T1 && isNumeric!T2 && isUniformRNG!UniformRNG)
+{
+    static if (isFloatingPoint!(CommonType!(T1, T2)))
+    {
+        alias T = CommonType!(T1, T2);
+    }
+    else
+    {
+        alias T = double;
+    }
+
+    return new NormalDistribution!(T, UniformRNG)(mu, sigma, rng);
+}
+
+/// ditto
+auto normalDistribution(T1, T2)
+                       (T1 mu, T2 sigma)
+    if (isNumeric!T1 && isNumeric!T2)
+{
+    return normalDistribution!(T1, T2, Random)(mu, sigma, rndGen);
+}
+
+unittest
+{
+    // check type rules for NormalDistribution
+    {
+        auto ndist = normalDistribution(0, 1);
+        static assert(is(typeof(ndist.front) == double));
+    }
+    {
+        auto ndist = normalDistribution(0.0f, 1);
+        static assert(is(typeof(ndist.front) == float));
+    }
+    {
+        auto ndist = normalDistribution(0.0, 1);
+        static assert(is(typeof(ndist.front) == double));
+    }
+    {
+        auto ndist = normalDistribution(0.0L, 1);
+        static assert(is(typeof(ndist.front) == real));
+    }
+
+    // check save works effectively
+    {
+        auto ndist = normalDistribution(3.29, 7.64);
+        auto ndist2 = ndist.save;
+        assert(ndist2 !is ndist);
+
+        ndist.popFrontN(10);
+        assert(ndist2.front != ndist.front);
+        ndist2.popFrontN(10);
+        assert(ndist2.front == ndist.front);
+    }
+}
+
+/**
+ * Generates random numbers drawn from a normal (Gaussian) distribution, using
+ * the Box-Muller Transform method.
+ *
+ * This implementation of Box-Muller closely follows that of its counterpart
+ * in the Boost.Random C++ library and should produce matching results aside
+ * from discrepancies that arise out of differences in floating-point precision.
+ */
+private struct NormalEngineBoxMuller(T)
+    if (isFloatingPoint!T)
+{
+  private:
+    bool _valid = false;
+    T _rho, _r1, _r2;
+
+  public:
+    /**
+     * Generates a single random number drawn from a normal distribution with
+     * mean $(D mu) and standard deviation $(D sigma), using $(D rng) as the
+     * source of randomness.
+     */
+    T opCall(UniformRNG)(in T mu, in T sigma, ref UniformRNG rng)
+        if (isUniformRNG!UniformRNG)
+    {
+        import std.math;
+
+        _valid = !_valid;
+
+        if (_valid)
+        {
+            /* N.B. Traditional Box-Muller asks for random numbers
+             * in (0, 1], which uniform() can readily supply.  We
+             * instead generate numbers in [0, 1) and use 1 - num
+             * to match the output of Boost.Random.
+             */
+            _r1 = uniform!("[)", T, T, UniformRNG)(0, 1, rng);
+            _r2 = uniform!("[)", T, T, UniformRNG)(0, 1, rng);
+            _rho = sqrt(-2 * log(1 - _r2));
+
+            return _rho * cos(2 * PI * _r1) * sigma + mu;
+        }
+        else
+        {
+            return _rho * sin(2 * PI * _r1) * sigma + mu;
+        }
+    }
+}
+
+unittest
+{
+    NormalEngineBoxMuller!double engine;
+    auto rng1 = new Random(unpredictableSeed);
+    auto rng2 = rng1.save;
+    auto rng3 = rng1.save;
+    double mu = 6.5, sigma = 3.2;
+
+    /* The Box-Muller engine produces variates a pair at
+     * a time.  We verify this is true by using a pair of
+     * pseudo-random number generators sharing the same
+     * initial state.
+     */
+    auto a1 = engine(mu, sigma, rng1);
+    auto b2 = engine(mu, sigma, rng2);
+
+    // verify that 1st RNG has been called but 2nd has not
+    assert(rng3.front != rng1.front);
+    assert(rng3.front == rng2.front);
+
+    /* Now, calling with the RNG order reversed should
+     * produce the same results: only rng2 will get called
+     * this time.
+     */
+    auto a2 = engine(mu, sigma, rng2);
+    auto b1 = engine(mu, sigma, rng1);
+
+    assert(a1 == a2);
+    assert(b1 == b2);
+    assert(rng2.front == rng1.front);
+    assert(rng3.front != rng2.front);
+
+    // verify that the RNGs have each been called twice
+    rng3.popFrontN(2);
+    assert(rng3.front == rng2.front);
+}
+
+/**
  * Generates a number between $(D a) and $(D b). The $(D boundaries)
  * parameter controls the shape of the interval (open vs. closed on
  * either side). Valid values for $(D boundaries) are $(D "[]"), $(D
@@ -504,210 +710,4 @@ unittest
         udist2.popFrontN(20);
         assert(udist2.front == udist.front);
     }
-}
-
-/**
- * Provides an infinite range of random numbers distributed according to the
- * normal (Gaussian) distribution with mean $(D mu) and standard deviation
- * $(D sigma).  The version that does not receive a specified random number
- * generator uses the default generator $(D rndGen) as its source of
- * randomness.
- */
-final class NormalDistribution(T, UniformRNG)
-    if (isFloatingPoint!T && isUniformRNG!UniformRNG)
-{
-  private:
-    alias NormalEngine = NormalEngineBoxMuller;
-    NormalEngine!T _engine;
-    UniformRNG _rng;
-    T _value;
-
-  public:
-    enum bool isRandomDistribution = true;
-    immutable T mean;
-    immutable T stdev;
-
-    this(T mu, T sigma, UniformRNG rng)
-    {
-        import std.exception;
-        enforce(sigma > 0);
-        mean = mu;
-        stdev = sigma;
-        _rng = rng;
-        popFront();
-    }
-
-    this(typeof(this) that)
-    {
-        this(that.mean, that.stdev, that._rng);
-    }
-
-    /// Range primitives.
-    enum bool empty = false;
-
-    /// ditto
-    T front() @property @safe const nothrow pure
-    {
-        return _value;
-    }
-
-    /// ditto
-    void popFront()
-    {
-        _value = _engine(this.mean, this.stdev, _rng);
-    }
-
-    /// ditto
-    static if (isForwardRange!UniformRNG)
-    {
-        typeof(this) save() @property
-        {
-            auto ret = new typeof(this)(this);
-            ret._rng = this._rng.save;
-            return ret;
-        }
-    }
-}
-
-/// ditto
-auto normalDistribution(T1, T2, UniformRNG)
-                       (T1 mu, T2 sigma, UniformRNG rng)
-    if (isNumeric!T1 && isNumeric!T2 && isUniformRNG!UniformRNG)
-{
-    static if (isFloatingPoint!(CommonType!(T1, T2)))
-    {
-        alias T = CommonType!(T1, T2);
-    }
-    else
-    {
-        alias T = double;
-    }
-
-    return new NormalDistribution!(T, UniformRNG)(mu, sigma, rng);
-}
-
-/// ditto
-auto normalDistribution(T1, T2)
-                       (T1 mu, T2 sigma)
-    if (isNumeric!T1 && isNumeric!T2)
-{
-    return normalDistribution!(T1, T2, Random)(mu, sigma, rndGen);
-}
-
-unittest
-{
-    // check type rules for NormalDistribution
-    {
-        auto ndist = normalDistribution(0, 1);
-        static assert(is(typeof(ndist.front) == double));
-    }
-    {
-        auto ndist = normalDistribution(0.0f, 1);
-        static assert(is(typeof(ndist.front) == float));
-    }
-    {
-        auto ndist = normalDistribution(0.0, 1);
-        static assert(is(typeof(ndist.front) == double));
-    }
-    {
-        auto ndist = normalDistribution(0.0L, 1);
-        static assert(is(typeof(ndist.front) == real));
-    }
-
-    // check save works effectively
-    {
-        auto ndist = normalDistribution(3.29, 7.64);
-        auto ndist2 = ndist.save;
-        assert(ndist2 !is ndist);
-
-        ndist.popFrontN(10);
-        assert(ndist2.front != ndist.front);
-        ndist2.popFrontN(10);
-        assert(ndist2.front == ndist.front);
-    }
-}
-
-/**
- * Generates random numbers drawn from a normal (Gaussian) distribution, using
- * the Box-Muller Transform method.
- *
- * This implementation of Box-Muller closely follows that of its counterpart
- * in the Boost.Random C++ library and should produce matching results aside
- * from discrepancies that arise out of differences in floating-point precision.
- */
-private struct NormalEngineBoxMuller(T)
-    if (isFloatingPoint!T)
-{
-  private:
-    bool _valid = false;
-    T _rho, _r1, _r2;
-
-  public:
-    /**
-     * Generates a single random number drawn from a normal distribution with
-     * mean $(D mu) and standard deviation $(D sigma), using $(D rng) as the
-     * source of randomness.
-     */
-    T opCall(UniformRNG)(in T mu, in T sigma, ref UniformRNG rng)
-        if (isUniformRNG!UniformRNG)
-    {
-        import std.math;
-
-        _valid = !_valid;
-
-        if (_valid)
-        {
-            /* N.B. Traditional Box-Muller asks for random numbers
-             * in (0, 1], which uniform() can readily supply.  We
-             * instead generate numbers in [0, 1) and use 1 - num
-             * to match the output of Boost.Random.
-             */
-            _r1 = uniform!("[)", T, T, UniformRNG)(0, 1, rng);
-            _r2 = uniform!("[)", T, T, UniformRNG)(0, 1, rng);
-            _rho = sqrt(-2 * log(1 - _r2));
-
-            return _rho * cos(2 * PI * _r1) * sigma + mu;
-        }
-        else
-        {
-            return _rho * sin(2 * PI * _r1) * sigma + mu;
-        }
-    }
-}
-
-unittest
-{
-    NormalEngineBoxMuller!double engine;
-    auto rng1 = new Random(unpredictableSeed);
-    auto rng2 = rng1.save;
-    auto rng3 = rng1.save;
-    double mu = 6.5, sigma = 3.2;
-
-    /* The Box-Muller engine produces variates a pair at
-     * a time.  We verify this is true by using a pair of
-     * pseudo-random number generators sharing the same
-     * initial state.
-     */
-    auto a1 = engine(mu, sigma, rng1);
-    auto b2 = engine(mu, sigma, rng2);
-
-    // verify that 1st RNG has been called but 2nd has not
-    assert(rng3.front != rng1.front);
-    assert(rng3.front == rng2.front);
-
-    /* Now, calling with the RNG order reversed should
-     * produce the same results: only rng2 will get called
-     * this time.
-     */
-    auto a2 = engine(mu, sigma, rng2);
-    auto b1 = engine(mu, sigma, rng1);
-
-    assert(a1 == a2);
-    assert(b1 == b2);
-    assert(rng2.front == rng1.front);
-    assert(rng3.front != rng2.front);
-
-    // verify that the RNGs have each been called twice
-    rng3.popFrontN(2);
-    assert(rng3.front == rng2.front);
 }
