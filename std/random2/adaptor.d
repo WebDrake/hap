@@ -54,18 +54,18 @@ import std.range, std.traits;
  * }
  * ----
  */
-final class RandomCover(Range, RandomGen)
-    if (isRandomAccessRange!Range && isUniformRNG!RandomGen)
+final class RandomCover(Range, UniformRNG)
+    if (isRandomAccessRange!Range && isUniformRNG!UniformRNG)
 {
   private:
     bool[] _chosen;
     size_t _current;
     size_t _alreadyChosen;
     Range _input;
-    RandomGen _rng;
+    UniformRNG _rng;
 
     // private constructor for use by .save
-    this(Range input, RandomGen rng, in bool[] chosen, in size_t current, in size_t already)
+    this(Range input, UniformRNG rng, in bool[] chosen, in size_t current, in size_t already)
     {
         _input = input;
         _rng = rng;
@@ -78,7 +78,7 @@ final class RandomCover(Range, RandomGen)
     }
 
   public:
-    this(Range input, RandomGen rng)
+    this(Range input, UniformRNG rng)
     {
         _input = input;
         _rng = rng;
@@ -158,7 +158,7 @@ final class RandomCover(Range, RandomGen)
     }
 
     /// ditto
-    static if (isForwardRange!RandomGen)
+    static if (isForwardRange!UniformRNG)
     {
         typeof(this) save() @property
         {
@@ -171,10 +171,10 @@ final class RandomCover(Range, RandomGen)
 }
 
 /// Ditto
-auto randomCover(Range, RandomGen)(Range r, RandomGen rng)
-    if (isRandomAccessRange!Range && isUniformRNG!RandomGen)
+auto randomCover(Range, UniformRNG)(Range r, UniformRNG rng)
+    if (isRandomAccessRange!Range && isUniformRNG!UniformRNG)
 {
-    return new RandomCover!(Range, RandomGen)(r, rng);
+    return new RandomCover!(Range, UniformRNG)(r, rng);
 }
 
 /// Ditto
@@ -190,9 +190,9 @@ unittest
 
     int[] a = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
 
-    foreach (RandomGen; TypeTuple!(void, UniformRNGTypes))
+    foreach (UniformRNG; TypeTuple!(void, UniformRNGTypes))
     {
-        static if (is(RandomGen == void))
+        static if (is(UniformRNG == void))
         {
             auto rc = randomCover(a);
             static assert(isInputRange!(typeof(rc)));
@@ -201,11 +201,11 @@ unittest
         }
         else
         {
-            auto rng = new RandomGen(unpredictableSeed);
+            auto rng = new UniformRNG(unpredictableSeed);
             auto rc = randomCover(a, rng);
             static assert(isInputRange!(typeof(rc)));
-            static assert((isForwardRange!RandomGen && isForwardRange!(typeof(rc))) ||
-                          (!isForwardRange!RandomGen && !isForwardRange!(typeof(rc))));
+            static assert((isForwardRange!UniformRNG && isForwardRange!(typeof(rc))) ||
+                          (!isForwardRange!UniformRNG && !isForwardRange!(typeof(rc))));
         }
 
         auto rc2 = rc.save;
@@ -266,8 +266,8 @@ unittest
  * }
  * ----
  */
-final class RandomSample(Range, RandomGen)
-    if (isInputRange!Range && isUniformRNG!RandomGen)
+final class RandomSample(Range, UniformRNG)
+    if (isInputRange!Range && isUniformRNG!UniformRNG)
 {
   private:
     import std.random2.distribution;
@@ -277,10 +277,10 @@ final class RandomSample(Range, RandomGen)
     double _Vprime;
     Range _input;
     Skip _skip = Skip.None;
-    RandomGen _rng;
+    UniformRNG _rng;
 
     // private constructor, for use with .save
-    this(Range input, RandomGen rng)
+    this(Range input, UniformRNG rng)
     {
         _input = input;
         _rng = rng;
@@ -472,13 +472,13 @@ final class RandomSample(Range, RandomGen)
   public:
     static if (hasLength!Range)
     {
-        this(Range input, size_t howMany, RandomGen rng)
+        this(Range input, size_t howMany, UniformRNG rng)
         {
             this(input, howMany, input.length, rng);
         }
     }
 
-    this(Range input, size_t howMany, size_t total, RandomGen rng)
+    this(Range input, size_t howMany, size_t total, UniformRNG rng)
     {
         import std.exception, std.string : format;
         _input = input;
@@ -549,7 +549,7 @@ final class RandomSample(Range, RandomGen)
     }
 
     /// ditto
-    static if (isForwardRange!Range && isForwardRange!RandomGen)
+    static if (isForwardRange!Range && isForwardRange!UniformRNG)
     {
         typeof(this) save() @property
         {
@@ -597,17 +597,17 @@ auto randomSample(Range)(Range r, size_t n)
 }
 
 /// Ditto
-auto randomSample(Range, RandomGen)(Range r, size_t n, size_t total, RandomGen rng)
-    if (isInputRange!Range && isUniformRNG!RandomGen)
+auto randomSample(Range, UniformRNG)(Range r, size_t n, size_t total, UniformRNG rng)
+    if (isInputRange!Range && isUniformRNG!UniformRNG)
 {
-    return new RandomSample!(Range, RandomGen)(r, n, total, rng);
+    return new RandomSample!(Range, UniformRNG)(r, n, total, rng);
 }
 
 /// Ditto
-auto randomSample(Range, RandomGen)(Range r, size_t n, RandomGen rng)
-    if (isInputRange!Range && hasLength!Range && isUniformRNG!RandomGen)
+auto randomSample(Range, UniformRNG)(Range r, size_t n, UniformRNG rng)
+    if (isInputRange!Range && hasLength!Range && isUniformRNG!UniformRNG)
 {
-    return new RandomSample!(Range, RandomGen)(r, n, r.length, rng);
+    return new RandomSample!(Range, UniformRNG)(r, n, r.length, rng);
 }
 
 unittest
@@ -895,8 +895,8 @@ unittest
         {
             UniformRNG gen = new UniformRNG;
 
-            auto sample(RandomGen)(uint seed, RandomGen gen)
-                if (isUniformRNG!RandomGen)
+            auto sample(UniformRNG)(uint seed, UniformRNG gen)
+                if (isUniformRNG!UniformRNG)
             {
                 gen.seed(seed);
                 return randomSample(a, 1, gen).front;
@@ -916,10 +916,10 @@ unittest
  * a random-access range with length.  If no RNG is specified, $(D rndGen)
  * will be used.
  */
-void randomShuffle(Range, RandomGen)(Range r, ref RandomGen gen)
-    if(isRandomAccessRange!Range && isUniformRNG!RandomGen)
+void randomShuffle(Range, UniformRNG)(Range r, ref UniformRNG gen)
+    if(isRandomAccessRange!Range && isUniformRNG!UniformRNG)
 {
-    return partialShuffle!(Range, RandomGen)(r, r.length, gen);
+    return partialShuffle!(Range, UniformRNG)(r, r.length, gen);
 }
 
 /// ditto
@@ -931,12 +931,12 @@ void randomShuffle(Range)(Range r)
 
 unittest
 {
-    foreach(RandomGen; UniformRNGTypes)
+    foreach(UniformRNG; UniformRNGTypes)
     {
         // Also tests partialShuffle indirectly.
         auto a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
         auto b = a.dup;
-        auto gen = new RandomGen(unpredictableSeed);
+        auto gen = new UniformRNG(unpredictableSeed);
         randomShuffle(a, gen);
         assert(a.sort == b);
         randomShuffle(a);
@@ -955,8 +955,8 @@ unittest
  * $(D r) must be a random-access range with length.  $(D n) must be less than
  * or equal to $(D r.length).  If no RNG is specified, $(D rndGen) will be used.
  */
-void partialShuffle(Range, RandomGen)(Range r, in size_t n, ref RandomGen gen)
-    if(isRandomAccessRange!Range && isUniformRNG!RandomGen)
+void partialShuffle(Range, UniformRNG)(Range r, in size_t n, ref UniformRNG gen)
+    if(isRandomAccessRange!Range && isUniformRNG!UniformRNG)
 {
     import std.algorithm, std.exception, std.random2.distribution;
     enforce(n <= r.length, "n must be <= r.length for partialShuffle.");
@@ -975,11 +975,11 @@ void partialShuffle(Range)(Range r, in size_t n)
 
 unittest
 {
-    foreach(RandomGen; UniformRNGTypes)
+    foreach(UniformRNG; UniformRNGTypes)
     {
         auto a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
         auto b = a.dup;
-        auto gen = new RandomGen(unpredictableSeed);
+        auto gen = new UniformRNG(unpredictableSeed);
         partialShuffle(a, 5, gen);
         assert(a[5 .. $] == b[5 .. $]);
         assert(a[0 .. 5].sort == b[0 .. 5]);

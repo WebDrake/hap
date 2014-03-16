@@ -89,27 +89,27 @@ unittest
 // General unittests that all uniform RNGs should pass
 unittest
 {
-    foreach (RandomGen; UniformRNGTypes)
+    foreach (UniformRNG; UniformRNGTypes)
     {
-        assert(isUniformRNG!RandomGen);
-        assert(isSeedable!RandomGen);
+        assert(isUniformRNG!UniformRNG);
+        assert(isSeedable!UniformRNG);
 
         // Ensure that popFront() actually changes the RNG state
-        typeof(RandomGen.front) a, b;
+        typeof(UniformRNG.front) a, b;
         {
-            auto gen = new RandomGen;
+            auto gen = new UniformRNG;
             a = gen.front;
         }
         {
-            auto gen = new RandomGen;
+            auto gen = new UniformRNG;
             gen.popFront();
             b = gen.front;
         }
         assert(a != b);
 
-        static if (isForwardRange!RandomGen)
+        static if (isForwardRange!UniformRNG)
         {
-            auto gen1 = new RandomGen(unpredictableSeed);
+            auto gen1 = new UniformRNG(unpredictableSeed);
             auto gen2 = gen1.save;
             assert(gen1 == gen2);
             assert(gen1 !is gen2);
@@ -126,12 +126,12 @@ unittest
     }
 
     // Ensure different RNGs don't evaluate as equal
-    foreach (i, RandomGen1; UniformRNGTypes)
+    foreach (i, UniformRNG1; UniformRNGTypes)
     {
-        foreach (j, RandomGen2; UniformRNGTypes)
+        foreach (j, UniformRNG2; UniformRNGTypes)
         {
-            auto gen1 = new RandomGen1;
-            auto gen2 = new RandomGen2;
+            auto gen1 = new UniformRNG1;
+            auto gen2 = new UniformRNG2;
 
             if (i == j)
             {

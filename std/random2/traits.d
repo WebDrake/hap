@@ -19,7 +19,7 @@ module std.random2.traits;
 import std.range;
 
 /**
- * Test if $(D RandomGen) is a random-number generator. The overload
+ * Test if $(D Range) is a random-number generator. The overload
  * taking an $(D ElementType) also makes sure that the Rng generates
  * values of that type.
  *
@@ -29,28 +29,28 @@ import std.range;
  *   $(LI it has a $(D bool isUniformRandom) field readable in CTFE)
  * )
  */
-template isUniformRNG(RandomGen, ElementType)
+template isUniformRNG(Range, ElementType)
 {
-    enum bool isUniformRNG = isInputRange!RandomGen &&
-        is(typeof(RandomGen.front) == ElementType) &&
+    enum bool isUniformRNG = isInputRange!Range &&
+        is(typeof(Range.front) == ElementType) &&
         is(typeof(
         {
-            static assert(RandomGen.isUniformRandom); //tag
+            static assert(Range.isUniformRandom); //tag
         }));
 }
 
 /// ditto
-template isUniformRNG(RandomGen)
+template isUniformRNG(Range)
 {
-    enum bool isUniformRNG = isInputRange!RandomGen &&
+    enum bool isUniformRNG = isInputRange!Range &&
         is(typeof(
         {
-            static assert(RandomGen.isUniformRandom); //tag
+            static assert(Range.isUniformRandom); //tag
         }));
 }
 
 /**
- * Test if $(D RandomGen) is a seedable uniform random number generator.
+ * Test if $(D UniformRNG) is a seedable uniform random number generator.
  * The overload taking a $(D SeedType) also makes sure that the generator
  * can be seeded with $(D SeedType).
  *
@@ -59,23 +59,23 @@ template isUniformRNG(RandomGen)
  *   $(LI it has a $(D seed(ElementType)) function)
  * )
  */
-template isSeedable(RandomGen, SeedType)
+template isSeedable(UniformRNG, SeedType)
 {
-    enum bool isSeedable = isUniformRNG!RandomGen &&
+    enum bool isSeedable = isUniformRNG!UniformRNG &&
         is(typeof(
         {
-            RandomGen r = void;     // can define a Rng object
+            UniformRNG r = void;    // can define a Rng object
             r.seed(SeedType.init);  // can seed a Rng
         }));
 }
 
 ///ditto
-template isSeedable(RandomGen)
+template isSeedable(UniformRNG)
 {
-    enum bool isSeedable = isUniformRNG!RandomGen &&
+    enum bool isSeedable = isUniformRNG!UniformRNG &&
         is(typeof(
         {
-            RandomGen r = void;            // can define a Rng object
+            UniformRNG r = void;           // can define a Rng object
             r.seed(typeof(r.front).init);  // can seed a Rng
         }));
 }

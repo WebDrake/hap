@@ -48,17 +48,17 @@ import std.range, std.traits;
  *                            // and 2 10% of the time
  * ----
  *
- * The range counterpart of $(D dice) is the $(DiscreteDistribution) class.
+ * The range counterpart of $(D dice) is the $(D DiscreteDistribution) class.
  */
-size_t dice(RandomGen, Num)(ref RandomGen rng, Num[] proportions...)
-    if (isNumeric!Num && isForwardRange!RandomGen)
+size_t dice(UniformRNG, Num)(ref UniformRNG rng, Num[] proportions...)
+    if (isNumeric!Num && isForwardRange!UniformRNG)
 {
     return diceImpl(rng, proportions);
 }
 
 /// ditto
-size_t dice(RandomGen, Range)(ref RandomGen rng, Range proportions)
-    if (isUniformRNG!RandomGen && isForwardRange!Range &&
+size_t dice(UniformRNG, Range)(ref UniformRNG rng, Range proportions)
+    if (isUniformRNG!UniformRNG && isForwardRange!Range &&
         isNumeric!(ElementType!Range) && !isArray!Range)
 {
     return diceImpl(rng, proportions);
@@ -78,8 +78,8 @@ size_t dice(Num)(Num[] proportions...)
     return diceImpl(rndGen, proportions);
 }
 
-private size_t diceImpl(RandomGen, Range)(ref RandomGen rng, Range proportions)
-    if (isUniformRNG!RandomGen && isForwardRange!Range && isNumeric!(ElementType!Range))
+private size_t diceImpl(UniformRNG, Range)(ref UniformRNG rng, Range proportions)
+    if (isUniformRNG!UniformRNG && isForwardRange!Range && isNumeric!(ElementType!Range))
 {
     import std.algorithm, std.exception, std.random2.distribution;
     double sum = reduce!("(assert(b >= 0), a + b)")(0.0, proportions.save);
