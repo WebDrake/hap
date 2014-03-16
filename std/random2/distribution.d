@@ -326,7 +326,7 @@ unittest
  * either side). Valid values for $(D boundaries) are $(D "[]"), $(D
  * "$(LPAREN)]"), $(D "[$(RPAREN)"), and $(D "()"). The default interval
  * is closed to the left and open to the right. The version that does not
- * take $(D urng) uses the default generator $(D rndGen).
+ * take $(D rng) uses the default generator $(D rndGen).
  *
  * Example:
  *
@@ -378,7 +378,7 @@ unittest
 // Implementation of uniform for floating-point types
 /// ditto
 auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
-            (T1 a, T2 b, ref UniformRNG urng)
+            (T1 a, T2 b, ref UniformRNG rng)
     if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
 {
     import std.exception, std.math, std.string : format;
@@ -403,16 +403,16 @@ auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
             format("std.random.uniform(): invalid bounding interval %s%s, %s%s",
                    boundaries[0], a, b, boundaries[1]));
     NumberType result =
-        _a + (_b - _a) * cast(NumberType) (urng.front - urng.min)
-        / (urng.max - urng.min);
-    urng.popFront();
+        _a + (_b - _a) * cast(NumberType) (rng.front - rng.min)
+        / (rng.max - rng.min);
+    rng.popFront();
     return result;
 }
 
 // Implementation of uniform for integral types
 /// ditto
 auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
-            (T1 a, T2 b, ref UniformRNG urng)
+            (T1 a, T2 b, ref UniformRNG rng)
     if ((isIntegral!(CommonType!(T1, T2)) || isSomeChar!(CommonType!(T1, T2)))
         && isUniformRNG!UniformRNG)
 {
@@ -438,7 +438,7 @@ auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
         if (b == ResultType.max && min == ResultType.min)
         {
             // Special case - all bits are occupied
-            return .uniform!ResultType(urng);
+            return .uniform!ResultType(rng);
         }
         auto count = unsigned(b - min) + 1u;
         static assert(count.min == 0);
@@ -459,7 +459,7 @@ auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
     CountType r;
     do
     {
-        r = cast(CountType) (uniform!CountType(urng) / bucketSize);
+        r = cast(CountType) (uniform!CountType(rng) / bucketSize);
     }
     while (r >= count);
     return cast(typeof(return)) (min + r);
@@ -494,12 +494,12 @@ unittest
  * for any integral type $(D T). If no random number generator is passed,
  * uses the default $(D rndGen).
  */
-auto uniform(T, UniformRNG)(ref UniformRNG urng)
+auto uniform(T, UniformRNG)(ref UniformRNG rng)
     if (!is(T == enum) && (isIntegral!T || isSomeChar!T)
         && isUniformRNG!UniformRNG)
 {
-    auto r = urng.front;
-    urng.popFront();
+    auto r = rng.front;
+    rng.popFront();
     static if (T.sizeof <= r.sizeof)
     {
         return cast(T) r;
@@ -507,8 +507,8 @@ auto uniform(T, UniformRNG)(ref UniformRNG urng)
     else
     {
         static assert(T.sizeof == 8 && r.sizeof == 4);
-        T r1 = urng.front | (cast(T)r << 32);
-        urng.popFront();
+        T r1 = rng.front | (cast(T)r << 32);
+        rng.popFront();
         return r1;
     }
 }
