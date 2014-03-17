@@ -25,7 +25,8 @@
  *
  * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
  *
- * Authors: $(WEB braingam.es, Joseph Rushton Wakeling)
+ * Authors: $(WEB braingam.es, Joseph Rushton Wakeling),
+ *          Chris Cain
  *
  * Source: $(PHOBOSSRC std/random2/_distribution.d)
  */
@@ -112,6 +113,198 @@ unittest
 
     i = dice(100U, 0U);
     assert(i == 0);
+}
+
+/**
+ * The range equivalent of $(D dice), each element of which is the
+ * result of the roll of a random die with relative probabilities
+ * stored in the range $(D proportions).  Each successive value of
+ * $(D front) reflects the index in $(D proportions) that was chosen.
+ *
+ * This offers a superior option in the event of making many rolls
+ * of the same die, as the sum and CDF of $(D proportions) only needs
+ * to be calculated upon construction and not with each call.
+ */
+final class DiscreteDistribution(SearchPolicy search, T, UniformRNG)
+{
+  private:
+    SortedRange!(immutable(T)[]) _cumulativeProportions;
+    UniformRNG _rng;
+    size_t _value;
+
+  public:
+    enum bool isRandomDistribution = true;
+
+    this(Range)(UniformRNG rng, Range proportions)
+        if (isInputRange!Range && isNumeric!(ElementType!Range))
+    in
+    {
+        assert(!proportions.empty, "Proportions of discrete distribution cannot be empty.");
+    }
+    body
+    {
+        import std.exception;
+
+        _rng = rng;
+
+        static if (isImplicitlyConvertible!(typeof(proportions.array), T[]))
+        {
+            T[] prop = proportions.array;
+        }
+        else
+        {
+            import std.conv;
+            T[] prop = proportions.map!(to!T).array;
+        }
+
+        alias A = Select!(isFloatingPoint!T, real, T);
+
+        A accumulator = 0;
+
+        foreach(ref e; prop)
+        {
+            assert(e >= 0, "Proportions of discrete distribution cannot be negative.");
+
+            debug
+            {
+                A preAccumulation = accumulator;
+            }
+
+            accumulator += e;
+
+            debug
+            {
+                static if (isIntegral!T)
+                {
+                    enforce(preAccumulation <= accumulator, "Integer overflow detected!");
+                }
+                else static if (isFloatingPoint!T)
+                {
+                    if (e > 0)
+                    {
+                        enforce(accumulator > preAccumulation, "Floating point rounding error detected!");
+                    }
+                }
+                else
+                {
+                    static assert(0);
+                }
+            }
+
+            e = accumulator;
+        }
+
+        _cumulativeProportions = assumeSorted(assumeUnique(prop)[]);
+
+        popFront();
+    }
+
+    this(typeof(this) that)
+    {
+        this._cumulativeProportions = that._cumulativeProportions.save;
+        this._rng = that._rng;
+        this._value = that._value;
+    }
+
+    /// Range primitives
+    enum bool empty = false;
+
+    /// ditto
+    size_t front() @property
+    {
+        return _value;
+    }
+
+    /// ditto
+    void popFront()
+    {
+        immutable sum = _cumulativeProportions.back;
+        immutable point = uniform!"[)"(0, sum, _rng);
+        assert(point < sum);
+        _value = _cumulativeProportions.length - _cumulativeProportions.upperBound!search(point).length;
+    }
+
+    /// ditto
+    static if (isForwardRange!UniformRNG)
+    {
+        typeof(this) save() @property
+        {
+            auto ret = new typeof(this)(this);
+            ret._rng = this._rng.save;
+            return ret;
+        }
+    }
+}
+
+/// ditto
+auto discreteDistribution(SearchPolicy search = SearchPolicy.binarySearch, UniformRNG, Range)
+                         (UniformRNG rng, Range proportions)
+    if (isInputRange!Range && isNumeric!(ElementType!Range) && isUniformRNG!UniformRNG)
+{
+    alias E = Unqual!(ElementType!Range);
+
+    static if (isIntegral!E)
+    {
+        static if (is(Largest!(ushort, Unsigned!E) == ushort))
+        {
+            alias T = uint;
+        }
+        else static if (is(Largest!(ulong, Unsigned!E) == ulong))
+        {
+            alias T = ulong;
+        }
+        else
+        {
+            static assert(false);
+        }
+    }
+    else static if (isFloatingPoint!E)
+    {
+        alias T = Largest!(double, E);
+    }
+
+    return new DiscreteDistribution!(search, T, UniformRNG)(rng, proportions);
+}
+
+/// ditto
+auto discreteDistribution(SearchPolicy search = SearchPolicy.binarySearch, Range)
+                         (Range proportions)
+    if (isInputRange!Range && isNumeric!(ElementType!Range))
+{
+    return discreteDistribution(rndGen, proportions);
+}
+
+/// ditto
+auto discreteDistribution(SearchPolicy search = SearchPolicy.binarySearch, UniformRNG, Num)
+                         (UniformRNG rng, Num[] proportions...)
+    if (isUniformRNG!UniformRNG && isNumeric!Num)
+{
+    return discreteDistribution(rng, proportions);
+}
+
+/// ditto
+auto discreteDistribution(SearchPolicy search = SearchPolicy.binarySearch, Num)
+                         (Num[] proportions...)
+    if (isNumeric!Num)
+{
+    return discreteDistribution(rndGen, proportions);
+}
+
+unittest
+{
+    import std.stdio;
+
+    auto ddist = discreteDistribution(25, 50, 25);
+    size_t[3] prop;
+
+    prop[] = 0;
+
+    writeln("Discrete Distribution: 25:50:25");
+    foreach (d; ddist.take(100_000))
+    {
+        prop[d]++;
+    }
+    writeln(prop);
 }
 
 /**
