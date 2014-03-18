@@ -11,7 +11,8 @@
  * different groups:
  *
  * $(UL
- *   $(LI $(B random number generators);)
+ *   $(LI $(B random number generators), deterministic pseudo-random algorithms;)
+ *   $(LI $(B random devices), non-deterministic sources of randomness;)
  *   $(LI $(B random distributions);)
  *   $(LI $(B random adaptors), such as shuffling or sampling objects;)
  *   $(LI $(B traits) related to random number generation.)

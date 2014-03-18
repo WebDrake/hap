@@ -298,9 +298,9 @@ auto discreteDistribution(SearchPolicy search = SearchPolicy.binarySearch, Num)
 
 unittest
 {
-    import std.stdio;
+    import std.random2.device, std.stdio;
 
-    foreach (UniformRNG; UniformRNGTypes)
+    foreach (UniformRNG; TypeTuple!(UniformRNGTypes, DevURandom!ulong))
     {
         auto ddist = discreteDistribution(25, 50, 25);
         size_t[3] prop;
