@@ -14,6 +14,11 @@
  *        distribution.)
  * )
  *
+ * Typical reasons for rejecting a function implementation include
+ * the function needing to hold state between calls to achieve
+ * adequate performance, or the function needing to allocate memory
+ * with each call.
+ *
  * As with random number generators, the random distribution range
  * objects implemented here are final classes in order to ensure
  * reference semantics.  They also assume reference type semantics on
