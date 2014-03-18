@@ -25,8 +25,9 @@
  *
  * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
  *
- * Authors: $(WEB braingam.es, Joseph Rushton Wakeling),
- *          Chris Cain
+ * Authors: $(WEB erdani.org, Andrei Alexandrescu),
+ *          Chris Cain,
+ *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
  * Source: $(PHOBOSSRC std/random2/_distribution.d)
  */
