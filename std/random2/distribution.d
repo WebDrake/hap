@@ -216,7 +216,7 @@ final class DiscreteDistribution(SearchPolicy search, T, UniformRNG)
     enum bool empty = false;
 
     /// ditto
-    size_t front() @property
+    size_t front() @property @safe const nothrow pure
     {
         return _value;
     }
@@ -300,17 +300,20 @@ unittest
 {
     import std.stdio;
 
-    auto ddist = discreteDistribution(25, 50, 25);
-    size_t[3] prop;
-
-    prop[] = 0;
-
-    writeln("Discrete Distribution: 25:50:25");
-    foreach (d; ddist.take(100_000))
+    foreach (UniformRNG; UniformRNGTypes)
     {
-        prop[d]++;
+        auto ddist = discreteDistribution(25, 50, 25);
+        size_t[3] prop;
+
+        prop[] = 0;
+
+        writeln("Discrete Distribution (", UniformRNG.stringof, "): 25:50:25");
+        foreach (d; ddist.take(100_000))
+        {
+            prop[d]++;
+        }
+        writeln(prop);
     }
-    writeln(prop);
 }
 
 /**
