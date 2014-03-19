@@ -1,7 +1,12 @@
 DC = dmd
 SRC = std/random2/*.d
 
-all: unit
+all: benchmark unit
+
+benchmark: benchmarknew
+
+benchmarknew: benchmarknew.d $(SRC)
+	$(DC) -O -inline -release -of$@ $^
 
 unit: $(SRC)
 	$(DC) -main -unittest -debug -cov -of$@ $^
@@ -12,4 +17,4 @@ doc: $(SRC)
 .PHONY: clean
 
 clean:
-	rm -rf unit *.o *.di html
+	rm -rf benchmarknew unit *.o *.di html
