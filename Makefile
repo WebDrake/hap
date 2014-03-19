@@ -3,9 +3,12 @@ SRC = std/random2/*.d
 
 all: benchmark unit
 
-benchmark: benchmarknew
+benchmark: benchmarknew benchmarkold
 
 benchmarknew: benchmarknew.d $(SRC)
+	$(DC) -O -inline -release -of$@ $^
+
+benchmarkold: benchmarkold.d $(SRC)
 	$(DC) -O -inline -release -of$@ $^
 
 unit: $(SRC)
@@ -17,4 +20,4 @@ doc: $(SRC)
 .PHONY: clean
 
 clean:
-	rm -rf benchmarknew unit *.o *.di html
+	rm -rf benchmarknew benchmarkold unit *.o *.di html
