@@ -914,20 +914,30 @@ unittest
 /**
  * Shuffles elements of $(D r) using $(D gen) as a shuffler. $(D r) must be
  * a random-access range with length.  If no RNG is specified, $(D rndGen)
- * will be used.
+ * will be used.  Returns the newly-shuffled range, and so is composable:
+ *
+ * Example:
+ * --------
+ * // generates the array [0, 1, ..., 10],
+ * // shuffles it, and writes to console
+ * iota(10).array.shuffle.writeln;
+ * --------
  */
-void randomShuffle(Range, UniformRNG)(Range r, ref UniformRNG gen)
+auto shuffle(Range, UniformRNG)(Range r, ref UniformRNG gen)
     if(isRandomAccessRange!Range && isUniformRNG!UniformRNG)
 {
     return partialShuffle!(Range, UniformRNG)(r, r.length, gen);
 }
 
 /// ditto
-void randomShuffle(Range)(Range r)
+auto shuffle(Range)(Range r)
     if(isRandomAccessRange!Range)
 {
-    return randomShuffle(r, rndGen);
+    return shuffle(r, rndGen);
 }
+
+// alias to allow drop-in replacement of previous function name
+alias randomShuffle = shuffle;
 
 unittest
 {
@@ -937,9 +947,9 @@ unittest
         auto a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
         auto b = a.dup;
         auto gen = new UniformRNG(unpredictableSeed);
-        randomShuffle(a, gen);
+        shuffle(a, gen);
         assert(a.sort == b);
-        randomShuffle(a);
+        shuffle(a);
         assert(a.sort == b);
     }
 }
@@ -955,7 +965,7 @@ unittest
  * $(D r) must be a random-access range with length.  $(D n) must be less than
  * or equal to $(D r.length).  If no RNG is specified, $(D rndGen) will be used.
  */
-void partialShuffle(Range, UniformRNG)(Range r, in size_t n, ref UniformRNG gen)
+auto partialShuffle(Range, UniformRNG)(Range r, in size_t n, ref UniformRNG gen)
     if(isRandomAccessRange!Range && isUniformRNG!UniformRNG)
 {
     import std.algorithm, std.exception, std.random2.distribution;
@@ -964,10 +974,11 @@ void partialShuffle(Range, UniformRNG)(Range r, in size_t n, ref UniformRNG gen)
     {
         swapAt(r, i, i + uniform(0, n - i, gen));
     }
+    return r;
 }
 
 /// ditto
-void partialShuffle(Range)(Range r, in size_t n)
+auto partialShuffle(Range)(Range r, in size_t n)
     if(isRandomAccessRange!Range)
 {
     return partialShuffle(r, n, rndGen);

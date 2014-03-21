@@ -96,7 +96,7 @@ void main()
         watch.start();
         foreach (immutable _; 0 .. l)
         {
-            randomShuffle(proportions, rng);
+            shuffle(proportions, rng);
         }
         watch.stop();
         writeln("\t", watch.peek.msecs, " ms. to generate ", l, " in-place random shuffles of ",
