@@ -20,7 +20,56 @@ module std.random2.device;
 
 import std.random2.traits;
 
-import std.range, std.stdio, std.traits;
+import std.range, std.traits, std.typetuple;
+
+/**
+ * $(D TypeTuple) of all random devices defined in this module.
+ * that act as a uniform random number generator.  Note that the
+ * available random devices may be dependent on operating system
+ * and/or hardware architecture.
+ */
+version (Posix)
+{
+    alias UniformRandomDeviceTypes =
+        TypeTuple!(DevRandom!ushort, DevRandom!uint, DevRandom!ulong,
+                   DevURandom!ushort, DevURandom!uint, DevURandom!ulong);
+}
+else
+{
+    alias UniformRandomDeviceTypes =
+        TypeTuple!();
+}
+
+unittest
+{
+    import std.stdio;
+    foreach (Dev; UniformRandomDeviceTypes)
+    {
+        static assert (isUniformRNG!Dev);
+
+        auto rnd = new Dev;
+
+        writeln("Reading random numbers of type ", typeof(rnd.max).stringof, " from ", rnd.source);
+
+        foreach (var; rnd.take(20))
+        {
+            writeln(var);
+        }
+        writeln;
+
+        writeln("Generating U[0, 1) from ", rnd.source, " variates of type ", typeof(rnd.max).stringof);
+
+        import std.random2.distribution;
+
+        auto udist = uniformDistribution(0.0, 1.0, rnd);
+
+        foreach (u; udist.take(20))
+        {
+            writeln(u);
+        }
+        writeln;
+    }
+}
 
 /**
  * Reads randomness from an infinite filestream.  In practice this
@@ -39,6 +88,7 @@ final class RandomFileStream(string filename, T)
     if (isIntegral!T && isUnsigned!T)
 {
   private:
+    import std.stdio;
     File _dev;
     T _value;
 
@@ -98,41 +148,5 @@ version (Posix)
         if (isIntegral!T && isUnsigned!T)
     {
         alias DevURandom = RandomFileStream!("/dev/urandom", T);
-    }
-}
-
-unittest
-{
-    import std.stdio, std.typetuple;
-    writeln("Imported std.random2.device!");
-
-    foreach (Dev; TypeTuple!(DevRandom, DevURandom))
-    {
-        foreach (T; TypeTuple!(ushort, uint, ulong))
-        {
-            static assert(isUniformRNG!(Dev!T));
-
-            auto rnd = new Dev!T;
-
-            writeln("Reading random numbers of type " ~ T.stringof ~ " from " ~ rnd.source);
-
-            foreach (var; rnd.take(20))
-            {
-                writeln(var);
-            }
-            writeln;
-
-            writeln("Generating U[0, 1) from " ~ rnd.source ~ " variates of type " ~ T.stringof);
-
-            import std.random2.distribution;
-
-            auto udist = uniformDistribution(0.0, 1.0, rnd);
-
-            foreach (u; udist.take(20))
-            {
-                writeln(u);
-            }
-            writeln;
-        }
     }
 }
