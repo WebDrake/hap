@@ -66,6 +66,23 @@ void main()
 
         watch.reset();
         watch.start();
+        foreach (immutable _; 0 .. m)
+        {
+            auto u = uniform01(rng);
+        }
+        watch.stop();
+        writeln("\t", watch.peek.msecs, " ms. to perform ", m, " calls to uniform01.");
+
+        auto u01dist = uniform01Distribution(rng);
+
+        watch.reset();
+        watch.start();
+        u01dist.popFrontN(m);
+        watch.stop();
+        writeln("\t", watch.peek.msecs, " ms. to perform ", m, " pops of ", typeof(u01dist).stringof);
+
+        watch.reset();
+        watch.start();
         foreach (immutable _; 0 .. k)
         {
             auto cover = randomCover(proportions, rng);
@@ -82,8 +99,8 @@ void main()
         watch.start();
         foreach (immutable _; 0 .. l)
         {
-            auto sample = randomSample(proportions, 5, rng);
-            foreach (s; sample)
+            auto s = sample(proportions, 5, rng);
+            foreach (e; s)
             {
                 auto val = s;
             }
