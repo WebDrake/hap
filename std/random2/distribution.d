@@ -582,6 +582,27 @@ unittest
 auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
             (T1 a, T2 b, ref UniformRNG rng)
     if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
+out (result)
+{
+    static if (boundaries[0] == '(')
+    {
+        assert(a < result);
+    }
+    else static if (boundaries[0] == '[')
+    {
+        assert(a <= result);
+    }
+
+    static if (boundaries[1] == ')')
+    {
+        assert(result < b);
+    }
+    else static if (boundaries[1] == ']')
+    {
+        assert(result <= b);
+    }
+}
+body
 {
     import std.exception, std.math, std.string : format;
     alias Unqual!(CommonType!(T1, T2)) NumberType;
@@ -617,6 +638,27 @@ auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
             (T1 a, T2 b, ref UniformRNG rng)
     if ((isIntegral!(CommonType!(T1, T2)) || isSomeChar!(CommonType!(T1, T2)))
         && isUniformRNG!UniformRNG)
+out (result)
+{
+    static if (boundaries[0] == '(')
+    {
+        assert(a < result);
+    }
+    else static if (boundaries[0] == '[')
+    {
+        assert(a <= result);
+    }
+
+    static if (boundaries[1] == ')')
+    {
+        assert(result < b);
+    }
+    else static if (boundaries[1] == ']')
+    {
+        assert(result <= b);
+    }
+}
+body
 {
     import std.conv, std.exception, std.string : format;
     alias Unqual!(CommonType!(T1, T2)) ResultType;
