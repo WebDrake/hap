@@ -922,6 +922,9 @@ unittest
  * // shuffles it, and writes to console
  * iota(10).array.shuffle.writeln;
  * --------
+ *
+ * A $(D randomShuffle) alias has been provided to ease migration from code
+ * written using $(XREF random, randomShuffle).
  */
 auto shuffle(Range, UniformRNG)(Range r, ref UniformRNG gen)
     if(isRandomAccessRange!Range && isUniformRNG!UniformRNG)
@@ -936,7 +939,7 @@ auto shuffle(Range)(Range r)
     return shuffle(r, rndGen);
 }
 
-// alias to allow drop-in replacement of previous function name
+/// ditto
 alias randomShuffle = shuffle;
 
 unittest
