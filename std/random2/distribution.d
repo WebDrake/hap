@@ -955,3 +955,176 @@ unittest
         assert(udist2.front == udist.front);
     }
 }
+
+/**
+ * Generates a uniformly-distributed floating point number
+ * of type $(D T) in the range [0, 1).  If no random number
+ * generator is specified, the default RNG $(D rndGen) will
+ * be used as the source of randomness.
+ *
+ * uniform01 offers a faster generation of random variates
+ * than the equivalent uniform(0.0, 1.0) and so may be
+ * preferred for some applications.
+ */
+T uniform01(T = double)()
+    if (isFloatingPoint!T)
+{
+    return uniform01!T(rndGen);
+}
+
+/// ditto
+T uniform01(T = double, UniformRNG)(UniformRNG rng)
+    if (isFloatingPoint!T)
+out (result)
+{
+    assert(result < 1);
+}
+body
+{
+    import std.string : format;
+    alias R = typeof(rng.front);
+    static if (isIntegral!R)
+    {
+        enum T denom = 1 / ((cast(T) 1) + rng.max - rng.min);
+    }
+    else static if (isFloatingPoint!R)
+    {
+        enum T denom = 1 / ((cast(T) 1) + rng.max - rng.min);
+    }
+    else
+    {
+        static assert(false);
+    }
+
+    T u = (rng.front - rng.min) * denom;
+
+    rng.popFront();
+
+    return u;
+}
+
+unittest
+{
+    import std.typetuple;
+    foreach (UniformRNG; UniformRNGTypes)
+    {
+
+        foreach (T; TypeTuple!(float, double, real))
+        {
+            UniformRNG rng = new UniformRNG(unpredictableSeed);
+
+            auto a = uniform01();
+            assert(is(typeof(a) == double));
+            assert(0 <= a && a < 1);
+
+            auto b = uniform01(rng);
+            assert(is(typeof(a) == double));
+            assert(0 <= b && b < 1);
+
+            auto c = uniform01!T();
+            assert(is(typeof(c) == T));
+            assert(0 <= c && c < 1);
+
+            auto d = uniform01!T(rng);
+            assert(is(typeof(d) == T));
+            assert(0 <= d && d < 1);
+
+            T init = uniform01!T(rng);
+            size_t i = 50;
+            while (--i && uniform01!T(rng) == init) {}
+            assert(i > 0);
+            assert(i < 50);
+        }
+    }
+}
+
+/**
+ * Provides an infinite sequence of random numbers uniformly distributed in the
+ * interval [0, 1).  If no RNG is specified, $(D uniformDistribution) will use
+ * the default generator $(D rndGen).
+ */
+final class Uniform01Distribution(T, UniformRNG)
+    if (isFloatingPoint!T && isUniformRNG!UniformRNG)
+{
+  private:
+    UniformRNG _rng;
+    T _value;
+
+  public:
+    enum T min = 0;
+    enum T max = 1;
+    enum bool isRandomDistribution = true;
+    enum bool isUniformRandom = true;
+
+    this(UniformRNG rng)
+    {
+        _rng = rng;
+        popFront();
+    }
+
+    this(typeof(this) that)
+    {
+        this(that._rng);
+    }
+
+    /// Range primitives.
+    enum bool empty = false;
+
+    /// ditto
+    T front() @property @safe const nothrow pure
+    {
+        return _value;
+    }
+
+    /// ditto
+    void popFront()
+    {
+        _value = uniform01!(T, UniformRNG)(_rng);
+    }
+
+    /// ditto
+    static if (isForwardRange!UniformRNG)
+    {
+        typeof(this) save() @property
+        {
+            auto ret = new typeof(this)(this);
+            ret._rng = this._rng.save;
+            return ret;
+        }
+    }
+}
+
+/// ditto
+auto uniform01Distribution(T = double, UniformRNG)(ref UniformRNG rng)
+    if (isFloatingPoint!T && isUniformRNG!UniformRNG)
+{
+    return new Uniform01Distribution!(T, UniformRNG)(rng);
+}
+
+/// ditto
+auto uniform01Distribution(T = double)()
+    if (isFloatingPoint!T)
+{
+    return new Uniform01Distribution!(T, Random)(rndGen);
+}
+
+unittest
+{
+    import std.stdio;
+    auto u01 = uniform01Distribution();
+
+    foreach (immutable _; 0 .. 1_000_000)
+    {
+        auto u = uniform01(u01);
+    }
+
+    auto u0101 = uniform01Distribution(u01);
+
+    foreach (u; u0101.take(1_000_000))
+    {
+    }
+
+    import std.random2.adaptor;
+
+    iota(100).sample(5, u0101).writeln;
+}
