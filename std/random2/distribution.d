@@ -472,8 +472,8 @@ private struct NormalEngineBoxMuller(T)
              * instead generate numbers in [0, 1) and use 1 - num
              * to match the output of Boost.Random.
              */
-            _r1 = uniform!("[)", T, T, UniformRNG)(0, 1, rng);
-            _r2 = uniform!("[)", T, T, UniformRNG)(0, 1, rng);
+            _r1 = uniform01!T(rng);
+            _r2 = uniform01!T(rng);
             _rho = sqrt(-2 * log(1 - _r2));
 
             return _rho * cos(2 * PI * _r1) * sigma + mu;
