@@ -957,14 +957,14 @@ unittest
 }
 
 /**
- * Generates a uniformly-distributed floating point number
- * of type $(D T) in the range [0, 1).  If no random number
- * generator is specified, the default RNG $(D rndGen) will
- * be used as the source of randomness.
+ * Generates a uniformly-distributed floating point number of type
+ * $(D T) in the range [0, 1).  If no random number generator is
+ * specified, the default RNG $(D rndGen) will be used as the source
+ * of randomness.
  *
- * uniform01 offers a faster generation of random variates
- * than the equivalent uniform(0.0, 1.0) and so may be
- * preferred for some applications.
+ * $(D uniform01) offers a faster generation of random variates than
+ * the equivalent $(D uniform!"[)"(0.0, 1.0)) and so may be preferred
+ * for some applications.
  */
 T uniform01(T = double)()
     if (isFloatingPoint!T)
@@ -973,34 +973,41 @@ T uniform01(T = double)()
 }
 
 /// ditto
-T uniform01(T = double, UniformRNG)(UniformRNG rng)
-    if (isFloatingPoint!T)
+T uniform01(T = double, UniformRNG)(ref UniformRNG rng)
+    if (isFloatingPoint!T && isUniformRNG!UniformRNG)
 out (result)
 {
+    assert(0 <= result);
     assert(result < 1);
 }
 body
 {
-    import std.string : format;
     alias R = typeof(rng.front);
     static if (isIntegral!R)
     {
-        enum T denom = 1 / ((cast(T) 1) + rng.max - rng.min);
+        enum T factor = 1 / (T(1) + rng.max - rng.min);
     }
     else static if (isFloatingPoint!R)
     {
-        enum T denom = 1 / ((cast(T) 1) + rng.max - rng.min);
+        enum T factor = 1 / (rng.max - rng.min);
     }
     else
     {
         static assert(false);
     }
 
-    T u = (rng.front - rng.min) * denom;
+    while (true)
+    {
+        immutable T u = (rng.front - rng.min) * factor;
+        rng.popFront();
+        if (u < 1)
+        {
+            return u;
+        }
+    }
 
-    rng.popFront();
-
-    return u;
+    // Shouldn't ever get here.
+    assert(false);
 }
 
 unittest
@@ -1008,7 +1015,6 @@ unittest
     import std.typetuple;
     foreach (UniformRNG; UniformRNGTypes)
     {
-
         foreach (T; TypeTuple!(float, double, real))
         {
             UniformRNG rng = new UniformRNG(unpredictableSeed);
