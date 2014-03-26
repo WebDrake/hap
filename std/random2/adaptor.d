@@ -29,32 +29,35 @@ import std.random2.generator, std.random2.traits;
 
 import std.range, std.traits;
 
-// RandomCover
+// Cover
 /**
  * Covers a given range $(D r) in a random manner, i.e. goes through each
  * element of $(D r) once and only once, but in a random order.  $(D r)
  * must be a random-access range with length.
  *
- * If no random number generator is passed to $(D randomCover), the
- * thread-global RNG rndGen will be used.
+ * If no random number generator is passed to $(D cover), the thread-global
+ * RNG rndGen will be used as the source of randomness.
  *
  * Example:
  * ----
  * int[] a = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
- * foreach (e; randomCover(a))
+ * foreach (e; cover(a))
  * {
  *     writeln(e);
  * }
  *
  * // using a specified random number generator
  * auto gen = new Random(unpredictableSeed);
- * foreach (e; randomCover(a, gen))
+ * foreach (e; cover(a, gen))
  * {
  *     writeln(e);
  * }
  * ----
+ *
+ * The alias $(D randomCover) is available to ease migration for code
+ * written using $(XREF random, randomCover).
  */
-final class RandomCover(Range, UniformRNG)
+final class Cover(Range, UniformRNG)
     if (isRandomAccessRange!Range && isUniformRNG!UniformRNG)
 {
   private:
@@ -170,19 +173,22 @@ final class RandomCover(Range, UniformRNG)
 
 }
 
-/// Ditto
-auto randomCover(Range, UniformRNG)(Range r, UniformRNG rng)
+/// ditto
+auto cover(Range, UniformRNG)(Range r, UniformRNG rng)
     if (isRandomAccessRange!Range && isUniformRNG!UniformRNG)
 {
-    return new RandomCover!(Range, UniformRNG)(r, rng);
+    return new Cover!(Range, UniformRNG)(r, rng);
 }
 
-/// Ditto
-auto randomCover(Range)(Range r)
+/// ditto
+auto cover(Range)(Range r)
     if (isRandomAccessRange!Range)
 {
-    return new RandomCover!(Range, Random)(r, rndGen);
+    return new Cover!(Range, Random)(r, rndGen);
 }
+
+/// ditto
+alias randomCover = cover;
 
 unittest
 {
@@ -194,25 +200,25 @@ unittest
     {
         static if (is(UniformRNG == void))
         {
-            auto rc = randomCover(a);
-            static assert(isInputRange!(typeof(rc)));
-            static assert((isForwardRange!Random && isForwardRange!(typeof(rc))) ||
-                          (!isForwardRange!Random && !isForwardRange!(typeof(rc))));
+            auto c = cover(a);
+            static assert(isInputRange!(typeof(c)));
+            static assert((isForwardRange!Random && isForwardRange!(typeof(c))) ||
+                          (!isForwardRange!Random && !isForwardRange!(typeof(c))));
         }
         else
         {
             auto rng = new UniformRNG(unpredictableSeed);
-            auto rc = randomCover(a, rng);
-            static assert(isInputRange!(typeof(rc)));
-            static assert((isForwardRange!UniformRNG && isForwardRange!(typeof(rc))) ||
-                          (!isForwardRange!UniformRNG && !isForwardRange!(typeof(rc))));
+            auto c = cover(a, rng);
+            static assert(isInputRange!(typeof(c)));
+            static assert((isForwardRange!UniformRNG && isForwardRange!(typeof(c))) ||
+                          (!isForwardRange!UniformRNG && !isForwardRange!(typeof(c))));
         }
 
-        auto rc2 = rc.save;
+        auto c2 = c.save;
 
         int[] b = new int[9];
         uint i;
-        foreach (e, e2; lockstep(rc, rc2))
+        foreach (e, e2; lockstep(c, c2))
         {
             b[i++] = e;
             assert(e == e2);
@@ -757,7 +763,7 @@ unittest
             uint i = 0;
 
             // Small sample/source ratio, no specified RNG.
-            foreach (e; sample(randomCover(a), 5))
+            foreach (e; sample(cover(a), 5))
             {
                 ++i;
             }
@@ -765,7 +771,7 @@ unittest
 
             // Small sample/source ratio, specified RNG.
             i = 0;
-            foreach (e; sample(randomCover(a), 5, rng))
+            foreach (e; sample(cover(a), 5, rng))
             {
                 ++i;
             }

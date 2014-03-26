@@ -85,10 +85,10 @@ void main()
         watch.start();
         foreach (immutable _; 0 .. k)
         {
-            auto cover = randomCover(proportions, rng);
-            foreach (c; cover)
+            auto c = cover(proportions, rng);
+            foreach (e; c)
             {
-                auto val = c;
+                auto val = e;
             }
         }
         watch.stop();
