@@ -16,23 +16,35 @@
  */
 module std.random2.traits;
 
-import std.range;
+import std.range, std.traits;
 
 /**
- * Test if $(D Range) is a random-number generator. The overload
- * taking an $(D ElementType) also makes sure that the Rng generates
+ * Test if $(D Range) is a uniform random number generator. The overload
+ * taking an $(D ElementType) also makes sure that the RNG generates
  * values of that type.
  *
- * A random-number generator has at least the following features:
+ * A uniform random number generator has at least the following features:
  * $(UL
- *   $(LI it's an InputRange)
+ *   $(LI it is an InputRange)
  *   $(LI it has a $(D bool isUniformRandom) field readable in CTFE)
+ *   $(LI its element type is a uniform integral type)
+ *   $(LI it has $(D min) and $(D max) fields whose type is the same
+ *        as the element type)
  * )
+ *
+ * This quite strict definition follows that in the C++11 standard.
+ * Note that the template is unable to enforce some required features,
+ * such as the requirement that the RNG's values must be drawn from the
+ * $(I closed) interval $(D [min, max]).
  */
 template isUniformRNG(Range, ElementType)
 {
     enum bool isUniformRNG = isInputRange!Range &&
         is(typeof(Range.front) == ElementType) &&
+        is(typeof(Range.min) == ElementType) &&
+        is(typeof(Range.max) == ElementType) &&
+        isIntegral!ElementType &&
+        isUnsigned!ElementType &&
         is(typeof(
         {
             static assert(Range.isUniformRandom); //tag
@@ -42,10 +54,10 @@ template isUniformRNG(Range, ElementType)
 /// ditto
 template isUniformRNG(Range)
 {
-    enum bool isUniformRNG = isInputRange!Range &&
+    enum bool isUniformRNG =
         is(typeof(
         {
-            static assert(Range.isUniformRandom); //tag
+            static assert(isUniformRNG!(Range, typeof(Range.front)));
         }));
 }
 
@@ -82,6 +94,9 @@ template isSeedable(UniformRNG)
 
 unittest
 {
+    /* Not an RNG because it lacks isUniformRandom,
+     * min and max
+     */
     struct NoRng
     {
         @property uint front() {return 0;}
@@ -97,6 +112,9 @@ unittest
     assert(!noRng.empty);
     assert(!noRng.front);
 
+    /* Not an RNG because isUniformRandom is false,
+     * and it lacks min and max
+     */
     struct NoRng2
     {
         @property uint front() {return 0;}
@@ -114,6 +132,9 @@ unittest
     assert(!noRng2.empty);
     assert(!noRng2.front);
 
+    /* Not an RNG because it lacks front, min
+     * and max
+     */
     struct NoRng3
     {
         @property bool empty() {return false;}
@@ -129,8 +150,111 @@ unittest
     noRng3.popFront();
     assert(!noRng3.empty);
 
+    // Not an RNG because it lacks min and max
+    struct NoRng4
+    {
+        @property uint front() {return 0;}
+        @property bool empty() {return false;}
+        void popFront() {}
+
+        enum isUniformRandom = true;
+    }
+    static assert(!isUniformRNG!(NoRng4, uint));
+    static assert(!isUniformRNG!(NoRng4));
+    static assert(!isSeedable!(NoRng4, uint));
+    static assert(!isSeedable!(NoRng4));
+    NoRng4 noRng4;
+    noRng4.popFront();
+    assert(!noRng4.empty);
+    assert(!noRng4.front);
+
+    /* Not an RNG because max is different type
+     * to front and min
+     */
+    struct NoRng5
+    {
+        enum uint min = 0;
+        enum ulong max = ulong.max;
+        @property uint front() {return 0;}
+        @property bool empty() {return false;}
+        void popFront() {}
+
+        enum isUniformRandom = true;
+    }
+    static assert(!isUniformRNG!(NoRng5, uint));
+    static assert(!isUniformRNG!(NoRng5));
+    static assert(!isSeedable!(NoRng5, uint));
+    static assert(!isSeedable!(NoRng5));
+    NoRng5 noRng5;
+    noRng5.popFront();
+    assert(!noRng5.empty);
+    assert(!noRng5.front);
+
+    /* Not an RNG because its element type is
+     * not an unsigned integer
+     */
+    struct NoRng6
+    {
+        enum double min = 0;
+        enum double max = 23.5;
+        @property double front() {return 0;}
+        @property bool empty() {return false;}
+        void popFront() {}
+
+        enum isUniformRandom = true;
+    }
+    static assert(!isUniformRNG!(NoRng6, double));
+    static assert(!isUniformRNG!(NoRng6));
+    static assert(!isSeedable!(NoRng6, double));
+    static assert(!isSeedable!(NoRng6));
+    NoRng6 noRng6;
+    noRng6.popFront();
+    assert(!noRng6.empty);
+    assert(!noRng6.front);
+
+    // Not an RNG because it lacks isUniformRandom
+    struct NoRng7
+    {
+        enum uint min = 0;
+        enum uint max = uint.max;
+        @property uint front() {return 0;}
+        @property bool empty() {return false;}
+        void popFront() {}
+    }
+    static assert(!isUniformRNG!(NoRng7, uint));
+    static assert(!isUniformRNG!(NoRng7));
+    static assert(!isSeedable!(NoRng7, uint));
+    static assert(!isSeedable!(NoRng7));
+    NoRng7 noRng7;
+    noRng7.popFront();
+    assert(!noRng7.empty);
+    assert(!noRng7.front);
+
+    // Not an RNG because isUniformRandom is false
+    struct NoRng8
+    {
+        enum uint min = 0;
+        enum uint max = uint.max;
+        @property uint front() {return 0;}
+        @property bool empty() {return false;}
+        void popFront() {}
+
+        enum isUniformRandom = false;
+    }
+    static assert(!isUniformRNG!(NoRng8, uint));
+    static assert(!isUniformRNG!(NoRng8));
+    static assert(!isSeedable!(NoRng8, uint));
+    static assert(!isSeedable!(NoRng8));
+    NoRng8 noRng8;
+    noRng8.popFront();
+    assert(!noRng8.empty);
+    assert(!noRng8.front);
+
+    // Valid RNG, but not seedable
     struct ValidRng
     {
+        enum uint min = 0;
+        enum uint max = uint.max;
         @property uint front() {return 0;}
         @property bool empty() {return false;}
         void popFront() {}
@@ -146,20 +270,23 @@ unittest
     assert(!validRng.empty);
     assert(!validRng.front);
 
+    // Valid and seedable RNG
     struct SeedRng
     {
-        @property uint front() {return 0;}
+        enum ulong min = 0;
+        enum ulong max = ulong.max;
+        @property ulong front() {return 0;}
         @property bool empty() {return false;}
         void popFront() {}
-        void seed(uint val){}
+        void seed(ulong val){}
         enum isUniformRandom = true;
     }
-    static assert(isUniformRNG!(SeedRng, uint));
+    static assert(isUniformRNG!(SeedRng, ulong));
     static assert(isUniformRNG!(SeedRng));
-    static assert(isSeedable!(SeedRng, uint));
+    static assert(isSeedable!(SeedRng, ulong));
     static assert(isSeedable!(SeedRng));
     SeedRng seedRng;
-    seedRng.seed(123456789U);
+    seedRng.seed(123456789uL);
     seedRng.popFront();
     assert(!seedRng.empty);
     assert(!seedRng.front);
