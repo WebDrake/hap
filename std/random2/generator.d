@@ -2,13 +2,14 @@
 
 /**
  * Implements algorithms for uniform pseudo-random number generation.
- * By analogy to the definition used in the C++11 Standard Template
- * Library $(D $(LESS)_random$(GREATER)) header, a $(I uniform random
- * number generator) is defined to be an Input Range whose values are
- * unsigned integer values such that each value among the possible set
- * of results has (ideally) equal probability of being next in the
- * sequence.  Pseudo-random number generators are typically implemented
- * as Forward Ranges, but this is not a requirement.
+ * Following the definition used in the C++11 Standard Template Library
+ * $(D $(LESS)_random$(GREATER)) header, a $(I uniform random number
+ * generator) is defined to be an Input Range whose values are unsigned
+ * integer values drawn from the closed interval $(D [min, max]), such
+ * that each value among the possible set of results has (ideally) equal
+ * probability of being next in the sequence.  Pseudo-random number
+ * generators are typically implemented as Forward Ranges, but this is
+ * not a requirement.
  *
  * The uniform random number generators provided by this module are
  * implemented as final classes to ensure reference type semantics.
