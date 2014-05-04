@@ -1060,7 +1060,6 @@ final class Uniform01Distribution(T, UniformRNG)
     enum T min = 0;
     enum T max = 1;
     enum bool isRandomDistribution = true;
-    enum bool isUniformRandom = true;
 
     this(UniformRNG rng)
     {
@@ -1119,18 +1118,9 @@ unittest
     import std.stdio;
     auto u01 = uniform01Distribution();
 
-    foreach (immutable _; 0 .. 1_000_000)
+    foreach (immutable u; u01.take(1_000_000))
     {
-        auto u = uniform01(u01);
+        assert(0 <= u);
+        assert(u < 1);
     }
-
-    auto u0101 = uniform01Distribution(u01);
-
-    foreach (u; u0101.take(1_000_000))
-    {
-    }
-
-    import std.random2.adaptor;
-
-    iota(100).sample(5, u0101).writeln;
 }
