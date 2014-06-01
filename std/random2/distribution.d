@@ -1235,6 +1235,96 @@ unittest
 }
 
 /**
+ * Generates an infinite sequence of uniformly selected members of
+ * enum $(D E). If no random number generator is specified, the
+ * default $(D rndGen) will be used.
+ */
+final class UniformDistribution(E, UniformRNG)
+    if (is(E == enum) && isUniformRNG!UniformRNG)
+{
+  private:
+    UniformRNG _rng;
+    E _value;
+
+  public:
+    enum bool isRandomDistribution = true;
+
+    enum E min = E.min;
+    enum E max = E.max;
+
+    this(UniformRNG rng)
+    {
+        _rng = rng;
+        popFront();
+    }
+
+    this(typeof(this) that)
+    {
+        this(that._rng);
+    }
+
+    /// Range primitives.
+    enum bool empty = false;
+
+    /// ditto
+    E front() @property @safe const nothrow pure
+    {
+        return _value;
+    }
+
+    /// ditto
+    void popFront()
+    {
+        _value = uniform!(E, UniformRNG)(_rng);
+    }
+
+    /// ditto
+    static if (isForwardRange!UniformRNG)
+    {
+        typeof(this) save() @property
+        {
+            auto ret = new typeof(this)(this);
+            ret._rng = this._rng.save;
+            return ret;
+        }
+    }
+}
+
+/// ditto
+auto uniformDistribution(E, UniformRNG)
+                        (UniformRNG rng)
+    if (is(E == enum) && isUniformRNG!UniformRNG)
+{
+    return new UniformDistribution!(E, UniformRNG)(rng);
+}
+
+/// ditto
+auto uniformDistribution(E)()
+    if (is(E == enum))
+{
+    return new UniformDistribution!(E, Random)(rndGen);
+}
+
+///
+unittest
+{
+    enum Fruit { Apple = 12, Mango = 29, Pear = 72 }
+    foreach (UniformRNG; UniformRNGTypes)
+    {
+        auto rng = new UniformRNG(unpredictableSeed);
+        foreach (immutable f; uniformDistribution!Fruit().take(100))
+        {
+            assert(f == Fruit.Apple || f == Fruit.Mango || f == Fruit.Pear);
+        }
+
+        foreach (immutable f; uniformDistribution!Fruit().take(100))
+        {
+            assert(f == Fruit.Apple || f == Fruit.Mango || f == Fruit.Pear);
+        }
+    }
+}
+
+/**
  * Generates a uniformly-distributed floating point number of type
  * $(D T) in the range [0, 1).  If no random number generator is
  * specified, the default RNG $(D rndGen) will be used as the source
