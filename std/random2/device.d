@@ -35,44 +35,36 @@ import std.range, std.traits, std.typetuple;
  */
 version (Posix)
 {
+    pragma(msg, "Module std.random2.device is experimental.  Use with caution.");
     alias UniformRandomDeviceTypes =
         TypeTuple!(DevRandom!ushort, DevRandom!uint, DevRandom!ulong,
                    DevURandom!ushort, DevURandom!uint, DevURandom!ulong);
 }
 else
 {
+    pragma(msg, "Module std.random2.device is not currently supported on your operating system.");
     alias UniformRandomDeviceTypes =
         TypeTuple!();
 }
 
 unittest
 {
-    import std.stdio;
     foreach (Dev; UniformRandomDeviceTypes)
     {
         static assert (isUniformRNG!Dev);
 
         auto rnd = new Dev;
 
-        writeln("Reading random numbers of type ", typeof(rnd.max).stringof, " from ", rnd.source);
-
-        foreach (var; rnd.take(20))
+        auto init = rnd.front;
+        size_t i = 50;
+        do
         {
-            writeln(var);
+            rnd.popFront();
         }
-        writeln;
+        while (--i && rnd.front == init);
 
-        writeln("Generating U[0, 1) from ", rnd.source, " variates of type ", typeof(rnd.max).stringof);
-
-        import std.random2.distribution;
-
-        auto udist = uniformDistribution(0.0, 1.0, rnd);
-
-        foreach (u; udist.take(20))
-        {
-            writeln(u);
-        }
-        writeln;
+        assert(i > 0);
+        assert(i < 50);
     }
 }
 
