@@ -1468,7 +1468,7 @@ final class Uniform01Distribution(T, UniformRNG)
 }
 
 /// ditto
-auto uniform01Distribution(T = double, UniformRNG)(ref UniformRNG rng)
+auto uniform01Distribution(T = double, UniformRNG)(UniformRNG rng)
     if (isFloatingPoint!T && isUniformRNG!UniformRNG)
 {
     return new Uniform01Distribution!(T, UniformRNG)(rng);
@@ -1483,12 +1483,24 @@ auto uniform01Distribution(T = double)()
 
 unittest
 {
-    import std.stdio;
-    auto u01 = uniform01Distribution();
-
-    foreach (immutable u; u01.take(1_000_000))
+    foreach (immutable u; uniform01Distribution().take(1_000_000))
     {
         assert(0 <= u);
         assert(u < 1);
+    }
+
+    foreach (UniformRNG; UniformRNGTypes)
+    {
+        foreach (T; TypeTuple!(float, double, real))
+        {
+            auto rng = new UniformRNG;
+
+            foreach (immutable u; uniform01Distribution!T(rng.save).take(100))
+            {
+                assert(u == uniform01!T(rng));
+                assert(0 <= u);
+                assert(u < 1);
+            }
+        }
     }
 }
