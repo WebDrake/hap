@@ -490,7 +490,7 @@ final class MersenneTwisterEngine(UIntType,
         if (range.empty && j < n)
         {
             import std.exception, std.string : format;
-            throw new Exception(format("%s.seed: Input range only provided %s elements, "
+            throw new Exception(format("%s.seed: Input range only provided %s elements, " ~
                                        "need at least %s.", typeof(this).stringof, j, n));
         }
 
