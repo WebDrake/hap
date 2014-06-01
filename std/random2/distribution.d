@@ -32,6 +32,7 @@
  *
  * Authors: $(WEB erdani.org, Andrei Alexandrescu),
  *          Chris Cain,
+ *          Nils Boßung,
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
  * Source: $(PHOBOSSRC std/random2/_distribution.d)
@@ -913,6 +914,39 @@ unittest
         assert(i < 50);
     }
 }
+
+/**
+ * Returns a uniformly selected member of enum $(D E). If no random number
+ * generator is passed, uses the default $(D rndGen).
+ */
+auto uniform(E, UniformRNG)
+            (ref UniformRNG rng)
+    if (is(E == enum) && isUniformRNG!UniformRNG)
+{
+    static immutable E[EnumMembers!E.length] members = [EnumMembers!E];
+    return members[std.random.uniform(0, members.length, rng)];
+}
+
+/// Ditto
+auto uniform(E)()
+    if (is(E == enum))
+{
+    return uniform!E(rndGen);
+}
+
+///
+unittest
+{
+    enum Fruit { Apple = 12, Mango = 29, Pear = 72 }
+    foreach (immutable _; 0 .. 100)
+    {
+        foreach (immutable f; [uniform!Fruit(), rndGen.uniform!Fruit()])
+        {
+            assert(f == Fruit.Apple || f == Fruit.Mango || f == Fruit.Pear);
+        }
+    }
+}
+
 
 /**
  * Provides an infinite sequence of random numbers uniformly distributed between
