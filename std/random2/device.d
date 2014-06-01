@@ -8,8 +8,8 @@
  * this package, all random devices are implemented as final classes
  * to ensure reference semantics.
  *
- * This module is currently experimental and should be used with
- * caution.  It is not imported automatically as part of the
+ * Warning: This module is currently experimental and should be used
+ * with caution.  It is not imported automatically as part of the
  * std.random2 package but must be imported individually in its own
  * right.  Its API may change in future releases.
  *
