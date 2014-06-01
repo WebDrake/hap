@@ -1,5 +1,5 @@
 D = <span class="d_inlinecode">$0</span>
-HAPSRC = $(LINK2 https://github.com/WebDrake/hap/blob/master/$0, $0)
+HAPSRC = $(LINK2 https://github.com/WebDrake/hap/blob/master/source/$0, $0)
 HTTP = $(LINK2 http://$1,$2)
 HTTPS = $(LINK2 https://$1,$2)
 PHOBOSXREF = <a href="http://dlang.org/phobos/std_$1.html#$2">$(D std.$1.$2)</a>

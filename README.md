@@ -32,11 +32,20 @@ The experimental module `hap.random.device` must be imported individually
 and should be used with caution; its API may be subject to change.
 
 
-Building
---------
+Building/installing
+-------------------
 
-`hap.random` is a source library, but the included Makefile offers some
-utilities for developers:
+`hap.random` is a source library, and can be used as a `dub` package
+dependency.
+
+```
+dub fetch hap.random
+```
+
+should get you a copy from the `code.dlang.org` repository.
+
+In addition, the included Makefile offers some utilities for developers
+working directly on the library itself:
 
 ```
 make unittest
