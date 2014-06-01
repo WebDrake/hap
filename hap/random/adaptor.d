@@ -21,7 +21,7 @@
  * Authors: $(WEB erdani.org, Andrei Alexandrescu),
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
- * Source: $(PHOBOSSRC hap/random/_adaptor.d)
+ * Source: $(HAPSRC hap/random/_adaptor.d)
  */
 module hap.random.adaptor;
 
@@ -55,7 +55,7 @@ import std.range, std.traits;
  * ----
  *
  * The alias $(D randomCover) is available to ease migration for code
- * written using $(XREF random, randomCover).
+ * written using $(PHOBOSXREF random, randomCover).
  */
 final class Cover(Range, UniformRNG)
     if (isRandomAccessRange!Range && isUniformRNG!UniformRNG)
@@ -283,7 +283,7 @@ unittest
  * ----
  *
  * The alias $(D randomSample) is available to ease migration for
- * code written using $(XREF random, randomSample).
+ * code written using $(PHOBOSXREF random, randomSample).
  */
 final class Sample(Range, UniformRNG)
     if (isInputRange!Range && isUniformRNG!UniformRNG)
@@ -952,7 +952,7 @@ unittest
  * --------
  *
  * A $(D randomShuffle) alias has been provided to ease migration from code
- * written using $(XREF random, randomShuffle).
+ * written using $(PHOBOSXREF random, randomShuffle).
  */
 auto shuffle(Range, UniformRNG)(Range r, UniformRNG gen)
     if(isRandomAccessRange!Range && isUniformRNG!UniformRNG)

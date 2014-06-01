@@ -19,7 +19,7 @@
  *
  * Authors: $(WEB braingam.es, Joseph Rushton Wakeling)
  *
- * Source: $(PHOBOSSRC hap/random/_device.d)
+ * Source: $(HAPSRC hap/random/_device.d)
  */
 module hap.random.device;
 

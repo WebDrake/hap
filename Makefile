@@ -29,7 +29,7 @@ unittest: unit unit-xper
 	./unit-xper
 
 doc: $(SRC) $(EXPERIMENTAL)
-	$(DC) -o- -Ddhtml $^ ../dlang.org/std.ddoc
+	$(DC) -o- -Ddhtml $^ doc.ddoc
 
 .PHONY: clean
 

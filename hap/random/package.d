@@ -61,7 +61,7 @@
  *          Masahiro Nakagawa,
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
- * Source: $(PHOBOSSRC hap/_random/package.d)
+ * Source: $(HAPSRC hap/_random/package.d)
  */
 module hap.random;
 

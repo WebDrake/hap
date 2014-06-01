@@ -42,7 +42,7 @@
  *          Chris Cain,
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
- * Source: $(PHOBOSSRC hap/random/_distribution.d)
+ * Source: $(HAPSRC hap/random/_distribution.d)
  */
 module hap.random.distribution;
 

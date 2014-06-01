@@ -12,7 +12,7 @@
  * Authors: $(WEB erdani.org, Andrei Alexandrescu),
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
- * Source: $(PHOBOSSRC hap/random/_traits.d)
+ * Source: $(HAPSRC hap/random/_traits.d)
  */
 module hap.random.traits;
 

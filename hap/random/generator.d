@@ -29,7 +29,7 @@
  *          Masahiro Nakagawa (Xorshift random generator),
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
- * Source: $(PHOBOSSRC hap/random/_generator.d)
+ * Source: $(HAPSRC hap/random/_generator.d)
  */
 module hap.random.generator;
 
