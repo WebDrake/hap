@@ -449,8 +449,7 @@ final class MersenneTwisterEngine(UIntType,
     enum UIntType min = 0;
 
     /// Largest generated value
-    enum UIntType max =
-        w == UIntType.sizeof * 8 ? UIntType.max : ((cast(UIntType) 1) << w) - 1;
+    enum UIntType max = UIntType.max >> (UIntType.sizeof * 8u - w);
 
     /// Default seed value
     enum UIntType defaultSeed = 5489U;
