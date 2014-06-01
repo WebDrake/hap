@@ -943,7 +943,7 @@ unittest
  * A $(D randomShuffle) alias has been provided to ease migration from code
  * written using $(XREF random, randomShuffle).
  */
-auto shuffle(Range, UniformRNG)(Range r, ref UniformRNG gen)
+auto shuffle(Range, UniformRNG)(Range r, UniformRNG gen)
     if(isRandomAccessRange!Range && isUniformRNG!UniformRNG)
 {
     return partialShuffle!(Range, UniformRNG)(r, r.length, gen);
@@ -985,7 +985,7 @@ unittest
  * $(D r) must be a random-access range with length.  $(D n) must be less than
  * or equal to $(D r.length).  If no RNG is specified, $(D rndGen) will be used.
  */
-auto partialShuffle(Range, UniformRNG)(Range r, in size_t n, ref UniformRNG gen)
+auto partialShuffle(Range, UniformRNG)(Range r, in size_t n, UniformRNG gen)
     if(isRandomAccessRange!Range && isUniformRNG!UniformRNG)
 {
     import std.algorithm, std.exception, std.random2.distribution;

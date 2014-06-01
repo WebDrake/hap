@@ -58,14 +58,14 @@ import std.range, std.traits;
  *
  * The range counterpart of $(D dice) is the $(D DiscreteDistribution) class.
  */
-size_t dice(UniformRNG, Num)(ref UniformRNG rng, Num[] proportions...)
+size_t dice(UniformRNG, Num)(UniformRNG rng, Num[] proportions...)
     if (isNumeric!Num && isForwardRange!UniformRNG)
 {
     return diceImpl(rng, proportions);
 }
 
 /// ditto
-size_t dice(UniformRNG, Range)(ref UniformRNG rng, Range proportions)
+size_t dice(UniformRNG, Range)(UniformRNG rng, Range proportions)
     if (isUniformRNG!UniformRNG && isForwardRange!Range &&
         isNumeric!(ElementType!Range) && !isArray!Range)
 {
@@ -86,7 +86,7 @@ size_t dice(Num)(Num[] proportions...)
     return diceImpl(rndGen, proportions);
 }
 
-private size_t diceImpl(UniformRNG, Range)(ref UniformRNG rng, Range proportions)
+private size_t diceImpl(UniformRNG, Range)(UniformRNG rng, Range proportions)
     if (isUniformRNG!UniformRNG && isForwardRange!Range && isNumeric!(ElementType!Range))
 {
     import std.algorithm, std.exception, std.random2.distribution;
@@ -459,7 +459,7 @@ private struct NormalEngineBoxMuller(T)
      * mean $(D mu) and standard deviation $(D sigma), using $(D rng) as the
      * source of randomness.
      */
-    T opCall(UniformRNG)(in T mu, in T sigma, ref UniformRNG rng)
+    T opCall(UniformRNG)(in T mu, in T sigma, UniformRNG rng)
         if (isUniformRNG!UniformRNG)
     {
         import std.math;
@@ -581,7 +581,7 @@ unittest
 // Implementation of uniform for floating-point types
 /// ditto
 auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
-            (T1 a, T2 b, ref UniformRNG rng)
+            (T1 a, T2 b, UniformRNG rng)
     if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
 out (result)
 {
@@ -699,7 +699,7 @@ body
  */
 /// ditto
 auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
-            (T1 a, T2 b, ref UniformRNG rng)
+            (T1 a, T2 b, UniformRNG rng)
     if ((isIntegral!(CommonType!(T1, T2)) || isSomeChar!(CommonType!(T1, T2)))
         && isUniformRNG!UniformRNG)
 out (result)
@@ -875,7 +875,7 @@ unittest
  * for any integral type $(D T). If no random number generator is passed,
  * uses the default $(D rndGen).
  */
-auto uniform(T, UniformRNG)(ref UniformRNG rng)
+auto uniform(T, UniformRNG)(UniformRNG rng)
     if (!is(T == enum) && (isIntegral!T || isSomeChar!T)
         && isUniformRNG!UniformRNG)
 {
@@ -920,7 +920,7 @@ unittest
  * generator is passed, uses the default $(D rndGen).
  */
 auto uniform(E, UniformRNG)
-            (ref UniformRNG rng)
+            (UniformRNG rng)
     if (is(E == enum) && isUniformRNG!UniformRNG)
 {
     static immutable E[EnumMembers!E.length] members = [EnumMembers!E];
@@ -1341,7 +1341,7 @@ T uniform01(T = double)()
 }
 
 /// ditto
-T uniform01(T = double, UniformRNG)(ref UniformRNG rng)
+T uniform01(T = double, UniformRNG)(UniformRNG rng)
     if (isFloatingPoint!T && isUniformRNG!UniformRNG)
 out (result)
 {
