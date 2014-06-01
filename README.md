@@ -1,25 +1,69 @@
-A class-based attempt at a 2nd-generation random module for D.
+hap.random
+==========
 
-The choice of classes rather than structs reflects the fundamental
-requirement that random number generators operate as reference types:
-the lack of this leads to the current unfortunate situation in
-std.random where objects like RandomCover or RandomSample that wrap
-an underlying RNG can only copy it by value, which may in turn lead
-to many unintended correlations in supposedly random output.
+A D library for random number generation and related functionality such
+as sampling, shuffling and so on.
 
-The broad plan is for hap.random to be a package comprising the
-following modules, most of which are selected by analogy to the
-corresponding functionality in the C++11 standard:
+`hap.random` is intended as a replacement for Phobos' `std.random`, and
+addresses a number of issues encountered in that module.  In particular,
+`hap.random` implements random number generators and related entities
+as reference types rather than value types.  It is however largely
+derivative of `std.random` and to the greatest extent possible
+implements the same API, with some functional additions, notably the
+random distribution ranges.
 
-   hap.random.traits -- compile-time checks and templates for working
-                        with random number generators and related code
+The library name, `hap`, is Welsh for "random" or "chance". :-)
 
-   hap.random.generator -- uniform (pseudo-)random number generators
 
-   hap.random.distribution -- random distributions (e.g. uniform,
-                              normal, pareto, etc.)
+Using
+-----
 
-   hap.random.device -- "true" sources of randomness
+To import all standard functionality from the library, use
 
-   hap.random.adaptor -- objects that wrap RNGs and transform them
-                         into other forms of randomness
+```
+import hap.random;
+```
+
+The individual package modules `hap.random.generator`, `hap.random.distribution`,
+`hap.random.adaptor` and `hap.random.traits` can alternatively be imported
+individually depending on need.
+
+The experimental module `hap.random.device` must be imported individually
+and should be used with caution; its API may be subject to change.
+
+
+Building
+--------
+
+`hap.random` is a source library, but the included Makefile offers some
+utilities for developers:
+
+```
+make unittest
+```
+
+will build and run two different unittest executables, `unit` and
+`unit-xper`, covering respectively the standard and experimental parts
+of the library.
+
+```
+make benchmark
+```
+
+will build two benchmarking executables: `benchmarknew` benchmarks
+`hap.random` itself while `benchmarkold` offers comparable speed tests
+of `std.random`.
+
+```
+make doc
+```
+
+can be used to build documentation.
+
+
+Contributing
+------------
+
+Contributions of code, issue reports or simply suggestions are all welcome.
+`hap.random` is released under the Boost License 1.0, so code submissions
+must be similarly licensed.
