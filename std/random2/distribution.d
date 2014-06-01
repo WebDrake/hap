@@ -1353,7 +1353,7 @@ body
     alias R = typeof(rng.front);
     static if (isIntegral!R)
     {
-        enum T factor = 1 / (T(1) + rng.max - rng.min);
+        enum T factor = 1 / (cast(T) 1 + rng.max - rng.min);
     }
     else static if (isFloatingPoint!R)
     {
