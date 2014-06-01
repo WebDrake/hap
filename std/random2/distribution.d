@@ -733,7 +733,7 @@ body
     {
         enforce(a < ResultType.max,
                 text("std.random.uniform(): invalid left bound ", a));
-        ResultType lower = a + 1;
+        ResultType lower = cast(ResultType) (a + 1);
     }
     else
     {
@@ -958,7 +958,7 @@ unittest
  * generator $(D rndGen).
  */
 final class UniformDistribution(string boundaries = "[)", T, UniformRNG)
-    if (isNumeric!T && isUniformRNG!UniformRNG)
+    if ((isNumeric!T || isSomeChar!T) && isUniformRNG!UniformRNG)
 {
   private:
     UniformRNG _rng;
@@ -1014,8 +1014,9 @@ final class UniformDistribution(string boundaries = "[)", T, UniformRNG)
 
 /// ditto
 auto uniformDistribution(string boundaries = "[)", T1, T2, UniformRNG)
-                        (T1 a, T2 b, ref UniformRNG rng)
-    if (isNumeric!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
+                        (T1 a, T2 b, UniformRNG rng)
+    if ((isNumeric!(CommonType!(T1, T2)) || isSomeChar!(CommonType!(T1, T2)))
+        && isUniformRNG!UniformRNG)
 {
     alias T = CommonType!(T1, T2);
     return new UniformDistribution!(boundaries, T, UniformRNG)(a, b, rng);
@@ -1024,7 +1025,7 @@ auto uniformDistribution(string boundaries = "[)", T1, T2, UniformRNG)
 /// ditto
 auto uniformDistribution(string boundaries = "[)", T1, T2)
                         (T1 a, T2 b)
-    if (isNumeric!(CommonType!(T1, T2)))
+    if (isNumeric!(CommonType!(T1, T2)) || isSomeChar!(CommonType!(T1, T2)))
 {
     alias T = CommonType!(T1, T2);
     return new UniformDistribution!(boundaries, T, Random)(a, b, rndGen);
@@ -1032,40 +1033,39 @@ auto uniformDistribution(string boundaries = "[)", T1, T2)
 
 unittest
 {
-    static assert(isRandomDistribution!(UniformDistribution!("[)", int, Random)));
-    static assert(isRandomDistribution!(UniformDistribution!("(]", double, Random)));
+    // General tests
+    foreach (UniformRNG; UniformRNGTypes)
+    {
+        foreach (T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
+                               int, uint, long, ulong, float, double, real))
+        {
+            static assert(isRandomDistribution!(UniformDistribution!("[]", T, UniformRNG)));
+            static assert(isRandomDistribution!(UniformDistribution!("[)", T, UniformRNG)));
+            static assert(isRandomDistribution!(UniformDistribution!("(]", T, UniformRNG)));
+            static assert(isRandomDistribution!(UniformDistribution!("()", T, UniformRNG)));
 
-    // check distribution boundaries function OK for floating-point
-    {
-        auto udist = uniformDistribution(3.2, 5.9);
-        foreach (u; udist.take(100))
-        {
-            assert(udist.min <= u);
-            assert(u < udist.max);
-        }
-    }
-    {
-        auto udist = uniformDistribution!"()"(5.7, 8.9);
-        foreach (u; udist.take(100))
-        {
-            assert(udist.min < u);
-            assert(u < udist.max);
-        }
-    }
-    {
-        auto udist = uniformDistribution!"(]"(3.7L, 9.2L);
-        foreach (u; udist.take(100))
-        {
-            assert(udist.min < u);
-            assert(u <= udist.max);
-        }
-    }
-    {
-        auto udist = uniformDistribution!"[]"(2.1, 9.9);
-        foreach (u; udist.take(100))
-        {
-            assert(udist.min <= u);
-            assert(u <= udist.max);
+            T min = 0, max = 10;
+            auto rng = new UniformRNG(unpredictableSeed);
+
+            foreach (u; uniformDistribution!"[]"(min, max, rng.save).take(100))
+            {
+                assert(u == uniform!"[]"(min, max, rng));
+            }
+
+            foreach (u; uniformDistribution!"[)"(min, max, rng.save).take(100))
+            {
+                assert(u == uniform!"[)"(min, max, rng));
+            }
+
+            foreach (u; uniformDistribution!"(]"(min, max, rng.save).take(100))
+            {
+                assert(u == uniform!"(]"(min, max, rng));
+            }
+
+            foreach (u; uniformDistribution!"()"(min, max, rng.save).take(100))
+            {
+                assert(u == uniform!"()"(min, max, rng));
+            }
         }
     }
 
