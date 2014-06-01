@@ -1,5 +1,12 @@
 DC = dmd
-SRC = std/random2/*.d
+
+SRC = std/random2/adaptor.d      \
+      std/random2/distribution.d \
+      std/random2/generator.d    \
+      std/random2/package.d      \
+      std/random2/traits.d
+
+EXPERIMENTAL = std/random2/device.d
 
 all: benchmark unit
 
@@ -14,10 +21,17 @@ benchmarkold: benchmarkold.d $(SRC)
 unit: $(SRC)
 	$(DC) -main -unittest -debug -cov -of$@ $^
 
-doc: $(SRC)
+unit-xper: $(EXPERIMENTAL) $(SRC)
+	$(DC) -main -unittest -debug -cov -of$@ $^
+
+unittest: unit unit-xper
+	./unit
+	./unit-xper
+
+doc: $(SRC) $(EXPERIMENTAL)
 	$(DC) -o- -Ddhtml $^ ../dlang.org/std.ddoc
 
 .PHONY: clean
 
 clean:
-	rm -rf benchmarknew benchmarkold unit *.o *.di html
+	rm -rf benchmarknew benchmarkold unit unit-xper *.o *.di html
