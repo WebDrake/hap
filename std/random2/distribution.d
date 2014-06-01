@@ -26,13 +26,16 @@
  * may produce unexpected and incorrect behaviour when combined with
  * these objects.
  *
- * Copyright: © 2014 Joseph Rushton Wakeling
+ * Copyright: © 2008-2011 Andrei Alexandrescu,
+ *              2013      Nils Boßung (enum-based uniform distribution),
+ *              2013      Chris Cain (discrete distribution),
+ *              2013-2014 Joseph Rushton Wakeling
  *
  * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
  *
  * Authors: $(WEB erdani.org, Andrei Alexandrescu),
- *          Chris Cain,
  *          Nils Boßung,
+ *          Chris Cain,
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
  * Source: $(PHOBOSSRC std/random2/_distribution.d)

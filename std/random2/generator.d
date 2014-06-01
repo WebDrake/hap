@@ -17,11 +17,11 @@
  * so user-defined value-type RNGs may fail in unexpected ways.
  *
  * Non-deterministic random number generators, or $(I random devices),
- * are provided in a separate module.
+ * are provided in a separate module (currently experimental).
  *
  * Copyright: © 2008-2011 Andrei Alexandrescu,
- *              2011      Masahiro Nakagawa,
- *              2012-2014 Joseph Rushton Wakeling
+ *              2011      Masahiro Nakagawa (Xorshift generator),
+ *              2013-2014 Joseph Rushton Wakeling
  *
  * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
  *
