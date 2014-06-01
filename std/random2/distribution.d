@@ -90,11 +90,15 @@ private size_t diceImpl(UniformRNG, Range)(UniformRNG rng, Range proportions)
     if (isUniformRNG!UniformRNG && isForwardRange!Range && isNumeric!(ElementType!Range))
 {
     import std.algorithm, std.exception, std.random2.distribution;
-    double sum = reduce!((a, b) { assert(b >= 0); return a + b; })(0.0, proportions.save);
+
+    alias T = DiceType!Range;
+
+    T sum = reduce!((a, b) { assert(b >= 0); return a + b; })(cast(T) 0, proportions.save);
     enforce(sum > 0, "Proportions in a dice cannot sum to zero");
-    immutable point = uniform(0.0, sum, rng);
+
+    immutable point = uniform!("[)", T, T)(0, sum, rng);
     assert(point < sum);
-    auto mass = 0.0;
+    T mass = 0;
 
     size_t i = 0;
     foreach (e; proportions)
@@ -127,7 +131,80 @@ unittest
             i = dice(100U, 0U);
             assert(i == 0);
         }
+
+        import std.typetuple;
+
+        foreach(T; TypeTuple!(byte, ubyte, short, ushort, int, uint,
+                              long, ulong, float, double, real))
+        {
+            foreach (immutable l; 2 .. 100)
+            {
+                auto prop = new T[l];
+                prop[] = 0;
+                prop[0] = 10;
+                prop[$-1] = 10;
+
+                foreach (immutable _; 0 .. 100)
+                {
+                    auto i = dice(rng, prop);
+                    assert(i == 0 || i == l - 1);
+                }
+            }
+        }
     }
+}
+
+package template DiceType(Range)
+    if (isInputRange!Range && isNumeric!(ElementType!Range))
+{
+    alias DiceType = DiceType!(ElementType!Range);
+}
+
+package template DiceType(T)
+    if (isNumeric!T)
+{
+    static if (isIntegral!T)
+    {
+        static if (is(Largest!(ushort, Unsigned!T) == ushort))
+        {
+            alias DiceType = uint;
+        }
+        else static if (is(Largest!(ulong, Unsigned!T) == ulong))
+        {
+            alias DiceType = ulong;
+        }
+        else
+        {
+            static assert(false);
+        }
+    }
+    else static if (isFloatingPoint!T)
+    {
+        alias DiceType = Largest!(double, T);
+    }
+}
+
+unittest
+{
+    static assert(is(DiceType!byte == uint));
+    static assert(is(DiceType!ubyte == uint));
+    static assert(is(DiceType!short == uint));
+    static assert(is(DiceType!ushort == uint));
+    static assert(is(DiceType!int == ulong));
+    static assert(is(DiceType!uint == ulong));
+    static assert(is(DiceType!float == double));
+    static assert(is(DiceType!double == double));
+    static assert(is(DiceType!real == real));
+
+    static assert(is(DiceType!(byte[]) == uint));
+    static assert(is(DiceType!(ubyte[]) == uint));
+    static assert(is(DiceType!(short[]) == uint));
+    static assert(is(DiceType!(ushort[]) == uint));
+    static assert(is(DiceType!(int[]) == ulong));
+    static assert(is(DiceType!(uint[]) == ulong));
+    static assert(is(DiceType!(float[]) == double));
+    static assert(is(DiceType!(double[]) == double));
+    static assert(is(DiceType!(real[]) == real));
 }
 
 /**
@@ -256,29 +333,7 @@ auto discreteDistribution(SearchPolicy search = SearchPolicy.binarySearch, Unifo
                          (UniformRNG rng, Range proportions)
     if (isInputRange!Range && isNumeric!(ElementType!Range) && isUniformRNG!UniformRNG)
 {
-    alias E = Unqual!(ElementType!Range);
-
-    static if (isIntegral!E)
-    {
-        static if (is(Largest!(ushort, Unsigned!E) == ushort))
-        {
-            alias T = uint;
-        }
-        else static if (is(Largest!(ulong, Unsigned!E) == ulong))
-        {
-            alias T = ulong;
-        }
-        else
-        {
-            static assert(false);
-        }
-    }
-    else static if (isFloatingPoint!E)
-    {
-        alias T = Largest!(double, E);
-    }
-
-    return new DiscreteDistribution!(search, T, UniformRNG)(rng, proportions);
+    return new DiscreteDistribution!(search, DiceType!Range, UniformRNG)(rng, proportions);
 }
 
 /// ditto
@@ -335,6 +390,22 @@ unittest
             foreach (immutable d; discreteDistribution(rng, prop).take(100))
             {
                 assert(d == 0 || d == l - 1);
+            }
+        }
+
+        import std.typetuple;
+
+        foreach(T; TypeTuple!(byte, ubyte, short, ushort, int, uint,
+                              long, ulong, float, double, real))
+        {
+            foreach (immutable l; 2 .. 100)
+            {
+                auto prop = uniformDistribution!("[]", T, T)(1, 10, rng).take(10).array;
+
+                foreach (immutable d; discreteDistribution(rng.save, prop).take(100))
+                {
+                    assert(d == dice(rng, prop));
+                }
             }
         }
     }
