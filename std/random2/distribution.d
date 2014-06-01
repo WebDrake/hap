@@ -1127,6 +1127,114 @@ unittest
 }
 
 /**
+ * Generates an infinite sequence of uniformly-distributed numbers in the
+ * range $(D [T.min, T.max]) for any integral type $(D T).  If no random
+ * number generator is specified, the default $(D rndGen) will be used.
+ */
+final class UniformDistribution(T, UniformRNG)
+    if (!is(T == enum) && (isIntegral!T || isSomeChar!T)
+        && isUniformRNG!UniformRNG)
+{
+  private:
+    UniformRNG _rng;
+    T _value;
+
+  public:
+    enum bool isRandomDistribution = true;
+
+    enum T min = T.min;
+    enum T max = T.max;
+
+    this(UniformRNG rng)
+    {
+        _rng = rng;
+        popFront();
+    }
+
+    this(typeof(this) that)
+    {
+        this(that._rng);
+    }
+
+    /// Range primitives.
+    enum bool empty = false;
+
+    /// ditto
+    T front() @property @safe const nothrow pure
+    {
+        return _value;
+    }
+
+    /// ditto
+    void popFront()
+    {
+        _value = uniform!(T, UniformRNG)(_rng);
+    }
+
+    /// ditto
+    static if (isForwardRange!UniformRNG)
+    {
+        typeof(this) save() @property
+        {
+            auto ret = new typeof(this)(this);
+            ret._rng = this._rng.save;
+            return ret;
+        }
+    }
+}
+
+/// ditto
+auto uniformDistribution(T, UniformRNG)
+                        (UniformRNG rng)
+    if (!is(T == enum) && (isIntegral!T || isSomeChar!T)
+        && isUniformRNG!UniformRNG)
+{
+    return new UniformDistribution!(T, UniformRNG)(rng);
+}
+
+/// ditto
+auto uniformDistribution(T)()
+    if (!is(T == enum) && (isIntegral!T || isSomeChar!T))
+{
+    return new UniformDistribution!(T, Random)(rndGen);
+}
+
+unittest
+{
+    foreach (UniformRNG; UniformRNGTypes)
+    {
+        foreach (T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
+                               int, uint, long, ulong))
+        {
+            static assert(isRandomDistribution!(UniformDistribution!(T, UniformRNG)));
+
+            auto rng = new UniformRNG(unpredictableSeed);
+            auto udist = uniformDistribution!T(rng.save);
+
+            foreach (u; udist.take(100))
+            {
+                assert(uniform!T(rng) == u);
+            }
+
+            /* Limit this next test to integral types to avoid invalid UTF8
+             * code point errors.
+             */
+            static if (isIntegral!T)
+            {
+                auto udist2 = uniformDistribution!T();
+
+                foreach (u; udist2.take(100))
+                {
+                    import std.string : format;
+                    assert(u <= T.max, format("Random variate %s > %s (%s.max)", u, T.max, T.stringof));
+                    assert(u >= T.min, format("Random variate %s < %s (%s.min)", u, T.min, T.stringof));
+                }
+            }
+        }
+    }
+}
+
+/**
  * Generates a uniformly-distributed floating point number of type
  * $(D T) in the range [0, 1).  If no random number generator is
  * specified, the default RNG $(D rndGen) will be used as the source
