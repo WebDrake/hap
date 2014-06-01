@@ -220,7 +220,7 @@ unittest
         return true;
     }
 
-    static assert(c == 0 || properParameters(m, a, c), format("Incorrect instantiation of ", typeof(this).stringof));
+    static assert(c == 0 || properParameters(m, a, c), "Incorrect instantiation of " ~ typeof(this).stringof);
 
   public:
     enum bool isUniformRandom = true;
@@ -251,8 +251,8 @@ unittest
     {
         static if (c == 0)
         {
-            import std.exception, std.string : format;
-            enforce(x0, format("Invalid (zero) seed for %s", typeof(this).stringof));
+            import std.exception;
+            enforce(x0, "Invalid (zero) seed for " ~ typeof(this).stringof);
         }
         _x = m ? (x0 % m) : x0;
         popFront();
