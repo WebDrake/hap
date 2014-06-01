@@ -1,4 +1,4 @@
-import std.datetime, std.random2, std.range, std.stdio;
+import std.datetime, hap.random, std.range, std.stdio;
 
 void main()
 {

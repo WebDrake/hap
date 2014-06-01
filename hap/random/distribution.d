@@ -26,7 +26,7 @@
  * may produce unexpected and incorrect behaviour when combined with
  * these objects.
  *
- * Note: $(D std.random2.distribution.dice) uses a different algorithm
+ * Note: $(D hap._random.distribution.dice) uses a different algorithm
  * to its $(D std.random) counterpart and so will produce different
  * results.
  *
@@ -42,11 +42,11 @@
  *          Chris Cain,
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
- * Source: $(PHOBOSSRC std/random2/_distribution.d)
+ * Source: $(PHOBOSSRC hap/random/_distribution.d)
  */
-module std.random2.distribution;
+module hap.random.distribution;
 
-import std.random2.generator, std.random2.traits;
+import hap.random.generator, hap.random.traits;
 
 import std.range, std.traits;
 
@@ -65,7 +65,7 @@ import std.range, std.traits;
  *
  * The range counterpart of $(D dice) is the $(D DiscreteDistribution) class.
  *
- * Note: given an identically-seeded RNG as input, $(D std.random2.dice)
+ * Note: given an identically-seeded RNG as input, $(D hap.random.dice)
  * will produce different values to $(D std.random.dice).
  */
 size_t dice(UniformRNG, Num)(UniformRNG rng, Num[] proportions...)
@@ -99,7 +99,7 @@ size_t dice(Num)(Num[] proportions...)
 private size_t diceImpl(UniformRNG, Range)(UniformRNG rng, Range proportions)
     if (isUniformRNG!UniformRNG && isForwardRange!Range && isNumeric!(ElementType!Range))
 {
-    import std.algorithm, std.exception, std.random2.distribution;
+    import std.algorithm, std.exception, hap.random.distribution;
 
     alias T = DiceType!Range;
 

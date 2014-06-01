@@ -21,11 +21,11 @@
  * Authors: $(WEB erdani.org, Andrei Alexandrescu),
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
- * Source: $(PHOBOSSRC std/random2/_adaptor.d)
+ * Source: $(PHOBOSSRC hap/random/_adaptor.d)
  */
-module std.random2.adaptor;
+module hap.random.adaptor;
 
-import std.random2.generator, std.random2.traits;
+import hap.random.generator, hap.random.traits;
 
 import std.range, std.traits;
 
@@ -138,7 +138,7 @@ final class Cover(Range, UniformRNG)
             }
 
             // Roll a dice with k faces
-            import std.random2.distribution;
+            import hap.random.distribution;
             auto chooseMe = uniform(0, k, _rng) == 0;
             assert(k > 1 || chooseMe);
 
@@ -289,7 +289,7 @@ final class Sample(Range, UniformRNG)
     if (isInputRange!Range && isUniformRNG!UniformRNG)
 {
   private:
-    import std.random2.distribution;
+    import hap.random.distribution;
     enum ushort _alphaInverse = 13; // Vitter's recommended value.
     enum Skip { None, A, D };
     size_t _available, _toSelect, _index;
@@ -999,7 +999,7 @@ unittest
 auto partialShuffle(Range, UniformRNG)(Range r, in size_t n, UniformRNG gen)
     if(isRandomAccessRange!Range && isUniformRNG!UniformRNG)
 {
-    import std.algorithm, std.exception, std.random2.distribution;
+    import std.algorithm, std.exception, hap.random.distribution;
     enforce(n <= r.length, "n must be <= r.length for partialShuffle.");
     foreach (i; 0 .. n)
     {

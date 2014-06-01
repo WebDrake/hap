@@ -10,7 +10,7 @@
  *
  * Warning: This module is currently experimental and should be used
  * with caution.  It is not imported automatically as part of the
- * std.random2 package but must be imported individually in its own
+ * hap.random package but must be imported individually in its own
  * right.  Its API may change in future releases.
  *
  * Copyright: © 2014 Joseph Rushton Wakeling
@@ -19,11 +19,11 @@
  *
  * Authors: $(WEB braingam.es, Joseph Rushton Wakeling)
  *
- * Source: $(PHOBOSSRC std/random2/_device.d)
+ * Source: $(PHOBOSSRC hap/random/_device.d)
  */
-module std.random2.device;
+module hap.random.device;
 
-import std.random2.traits;
+import hap.random.traits;
 
 import std.range, std.traits, std.typetuple;
 
@@ -35,14 +35,14 @@ import std.range, std.traits, std.typetuple;
  */
 version (Posix)
 {
-    pragma(msg, "Module std.random2.device is experimental.  Use with caution.");
+    pragma(msg, "Module hap.random.device is experimental.  Use with caution.");
     alias UniformRandomDeviceTypes =
         TypeTuple!(DevRandom!ushort, DevRandom!uint, DevRandom!ulong,
                    DevURandom!ushort, DevURandom!uint, DevURandom!ulong);
 }
 else
 {
-    pragma(msg, "Module std.random2.device is not currently supported on your operating system.");
+    pragma(msg, "Module hap.random.device is not currently supported on your operating system.");
     alias UniformRandomDeviceTypes =
         TypeTuple!();
 }

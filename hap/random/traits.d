@@ -12,9 +12,9 @@
  * Authors: $(WEB erdani.org, Andrei Alexandrescu),
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
- * Source: $(PHOBOSSRC std/random2/_traits.d)
+ * Source: $(PHOBOSSRC hap/random/_traits.d)
  */
-module std.random2.traits;
+module hap.random.traits;
 
 import std.range, std.traits;
 

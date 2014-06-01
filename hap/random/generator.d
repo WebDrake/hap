@@ -29,11 +29,11 @@
  *          Masahiro Nakagawa (Xorshift random generator),
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
- * Source: $(PHOBOSSRC std/random2/_generator.d)
+ * Source: $(PHOBOSSRC hap/random/_generator.d)
  */
-module std.random2.generator;
+module hap.random.generator;
 
-import std.random2.traits;
+import hap.random.traits;
 
 import std.range, std.traits, std.typetuple;
 

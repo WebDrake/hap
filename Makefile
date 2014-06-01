@@ -1,12 +1,12 @@
 DC = dmd
 
-SRC = std/random2/adaptor.d      \
-      std/random2/distribution.d \
-      std/random2/generator.d    \
-      std/random2/package.d      \
-      std/random2/traits.d
+SRC = hap/random/adaptor.d      \
+      hap/random/distribution.d \
+      hap/random/generator.d    \
+      hap/random/package.d      \
+      hap/random/traits.d
 
-EXPERIMENTAL = std/random2/device.d
+EXPERIMENTAL = hap/random/device.d
 
 all: benchmark unit
 

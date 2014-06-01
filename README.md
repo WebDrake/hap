@@ -7,16 +7,19 @@ std.random where objects like RandomCover or RandomSample that wrap
 an underlying RNG can only copy it by value, which may in turn lead
 to many unintended correlations in supposedly random output.
 
-The broad plan is for std.random2 to be a package comprising the
-following modules, which are selected by analogy to the corresponding
-functionality in the C++11 standard:
+The broad plan is for hap.random to be a package comprising the
+following modules, most of which are selected by analogy to the
+corresponding functionality in the C++11 standard:
 
-   std.random2.generator -- uniform (pseudo-)random number generators
+   hap.random.traits -- compile-time checks and templates for working
+                        with random number generators and related code
 
-   std.random2.distribution -- random distributions (e.g. uniform,
-                               normal, pareto, etc.)
+   hap.random.generator -- uniform (pseudo-)random number generators
 
-   std.random2.device -- "true" sources of randomness
+   hap.random.distribution -- random distributions (e.g. uniform,
+                              normal, pareto, etc.)
 
-   std.random2.adaptor -- objects that wrap RNGs and transform them
-                          into other forms of randomness
+   hap.random.device -- "true" sources of randomness
+
+   hap.random.adaptor -- objects that wrap RNGs and transform them
+                         into other forms of randomness
