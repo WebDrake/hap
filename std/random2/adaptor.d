@@ -411,10 +411,16 @@ final class Sample(Range, UniformRNG)
             while (true)
             {
                 // Step D2: set values of x and u.
-                for (x = _available * (1-_Vprime), s = cast(size_t) trunc(x);
-                     s >= qu1;
-                     x = _available * (1-_Vprime), s = cast(size_t) trunc(x))
+                while (true)
                 {
+                    x = _available * (1 - _Vprime);
+                    s = cast(size_t) trunc(x);
+
+                    if (s < qu1)
+                    {
+                        break;
+                    }
+
                     _Vprime = newVprime(_toSelect);
                 }
 

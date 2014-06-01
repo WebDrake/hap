@@ -89,7 +89,7 @@ private size_t diceImpl(UniformRNG, Range)(ref UniformRNG rng, Range proportions
     if (isUniformRNG!UniformRNG && isForwardRange!Range && isNumeric!(ElementType!Range))
 {
     import std.algorithm, std.exception, std.random2.distribution;
-    double sum = reduce!("(assert(b >= 0), a + b)")(0.0, proportions.save);
+    double sum = reduce!((a, b) { assert(b >= 0); return a + b; })(0.0, proportions.save);
     enforce(sum > 0, "Proportions in a dice cannot sum to zero");
     immutable point = uniform(0.0, sum, rng);
     assert(point < sum);
