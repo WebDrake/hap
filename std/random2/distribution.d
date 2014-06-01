@@ -307,21 +307,36 @@ auto discreteDistribution(SearchPolicy search = SearchPolicy.binarySearch, Num)
 
 unittest
 {
-    import std.random2.device, std.stdio;
-
-    foreach (UniformRNG; TypeTuple!(UniformRNGTypes, DevURandom!ulong))
+    foreach (UniformRNG; TypeTuple!(UniformRNGTypes))
     {
-        auto ddist = discreteDistribution(25, 50, 25);
-        size_t[3] prop;
+        auto rng = new UniformRNG(unpredictableSeed);
 
-        prop[] = 0;
-
-        writeln("Discrete Distribution (", UniformRNG.stringof, "): 25:50:25");
-        foreach (d; ddist.take(100_000))
+        foreach (immutable d; discreteDistribution(rng, 100.0, 0.0).take(100))
         {
-            prop[d]++;
+            assert(d == 0);
         }
-        writeln(prop);
+
+        foreach (immutable d; discreteDistribution(rng, 0.0, 100.0).take(100))
+        {
+            assert(d == 1);
+        }
+
+        foreach (immutable d; discreteDistribution(100, 0).take(100))
+        {
+            assert(d == 0);
+        }
+
+        foreach (immutable l; 2 .. 100)
+        {
+            auto prop = new uint[l];
+            prop[] = 0;
+            prop[0] = prop[$-1] = 20;
+
+            foreach (immutable d; discreteDistribution(rng, prop).take(100))
+            {
+                assert(d == 0 || d == l - 1);
+            }
+        }
     }
 }
 
