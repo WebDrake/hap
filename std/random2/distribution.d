@@ -605,7 +605,7 @@ out (result)
 body
 {
     import std.exception, std.math, std.string : format;
-    alias Unqual!(CommonType!(T1, T2)) NumberType;
+    alias NumberType = Unqual!(CommonType!(T1, T2));
     static if (boundaries[0] == '(')
     {
         NumberType _a = nextafter(cast(NumberType) a, NumberType.infinity);

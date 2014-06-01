@@ -349,8 +349,7 @@ unittest
  * --------
  */
 alias MinstdRand0 = LinearCongruentialEngine!(uint, 16807, 0, 2147483647);
-/// ditto
-alias MinstdRand = LinearCongruentialEngine!(uint, 48271, 0, 2147483647);
+alias MinstdRand  = LinearCongruentialEngine!(uint, 48271, 0, 2147483647); /// ditto
 
 unittest
 {
@@ -948,13 +947,13 @@ unittest
  * n = rng.front;  // different across runs
  * -----
  */
-alias XorshiftEngine!(uint, 32,  13, 17, 15) Xorshift32;
-alias XorshiftEngine!(uint, 64,  10, 13, 10) Xorshift64;   /// ditto
-alias XorshiftEngine!(uint, 96,  10, 5,  26) Xorshift96;   /// ditto
-alias XorshiftEngine!(uint, 128, 11, 8,  19) Xorshift128;  /// ditto
-alias XorshiftEngine!(uint, 160, 2,  1,  4)  Xorshift160;  /// ditto
-alias XorshiftEngine!(uint, 192, 2,  1,  4)  Xorshift192;  /// ditto
-alias Xorshift128 Xorshift;                                /// ditto
+alias Xorshift32  = XorshiftEngine!(uint, 32,  13, 17, 15);
+alias Xorshift64  = XorshiftEngine!(uint, 64,  10, 13, 10); /// ditto
+alias Xorshift96  = XorshiftEngine!(uint, 96,  10, 5,  26); /// ditto
+alias Xorshift128 = XorshiftEngine!(uint, 128, 11, 8,  19); /// ditto
+alias Xorshift160 = XorshiftEngine!(uint, 160, 2,  1,  4);  /// ditto
+alias Xorshift192 = XorshiftEngine!(uint, 192, 2,  1,  4);  /// ditto
+alias Xorshift    = Xorshift128;                            /// ditto
 
 unittest
 {
@@ -968,7 +967,7 @@ unittest
         [0UL, 246875399, 3690007200, 1264581005, 3906711041, 1866187943, 2481925219, 2464530826, 1604040631, 3653403911]
     ];
 
-    alias TypeTuple!(Xorshift32, Xorshift64, Xorshift96, Xorshift128, Xorshift160, Xorshift192) XorshiftTypes;
+    alias XorshiftTypes = TypeTuple!(Xorshift32, Xorshift64, Xorshift96, Xorshift128, Xorshift160, Xorshift192);
 
     foreach (i, XorGen; XorshiftTypes)
     {
