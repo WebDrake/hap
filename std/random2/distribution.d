@@ -112,14 +112,22 @@ private size_t diceImpl(UniformRNG, Range)(UniformRNG rng, Range proportions)
 
 unittest
 {
-    auto gen = new Random(unpredictableSeed);
-    auto i = dice(gen, 0.0, 100.0);
-    assert(i == 1);
-    i = dice(gen, 100.0, 0.0);
-    assert(i == 0);
+    foreach (UniformRNG; UniformRNGTypes)
+    {
+        auto rng = new UniformRNG(unpredictableSeed);
 
-    i = dice(100U, 0U);
-    assert(i == 0);
+        foreach (immutable _; 0 .. 100)
+        {
+            auto i = dice(rng, 0.0, 100.0);
+            assert(i == 1);
+
+            i = dice(rng, 100.0, 0.0);
+            assert(i == 0);
+
+            i = dice(100U, 0U);
+            assert(i == 0);
+        }
+    }
 }
 
 /**
