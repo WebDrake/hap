@@ -90,6 +90,15 @@ final class Cover(Range, UniformRNG)
         popFront();
     }
 
+    this(typeof(this) that)
+    {
+        _chosen = that._chosen.dup;
+        _current = that._current;
+        _alreadyChosen = that._alreadyChosen;
+        _input = that._input.save;
+        _rng = that._rng;
+    }
+
     /// Range primitives.
     bool empty() @property @safe const nothrow pure
     {
@@ -165,8 +174,8 @@ final class Cover(Range, UniformRNG)
     {
         typeof(this) save() @property
         {
-            auto ret = new typeof(this)(_input.save, _rng.save, _chosen,
-                                        _current, _alreadyChosen);
+            auto ret = new typeof(this)(this);
+            ret._rng = this._rng.save;
             return ret;
         }
     }
@@ -288,13 +297,6 @@ final class Sample(Range, UniformRNG)
     Range _input;
     Skip _skip = Skip.None;
     UniformRNG _rng;
-
-    // private constructor, for use with .save
-    this(Range input, UniformRNG rng)
-    {
-        _input = input;
-        _rng = rng;
-    }
 
     // Randomly reset the value of _Vprime.
     double newVprime(size_t remaining)
@@ -526,6 +528,19 @@ final class Sample(Range, UniformRNG)
         prime();
     }
 
+    static if (isForwardRange!Range)
+    {
+        this(typeof(this) that)
+        {
+            this._available = that._available;
+            this._toSelect = that._toSelect;
+            this._index = that._index;
+            this._Vprime = that._Vprime;
+            this._input = that._input.save;
+            this._skip = that._skip;
+            this._rng = that._rng;
+        }
+    }
 
     /// Range primitives.
     bool empty() @property @safe const nothrow pure
@@ -569,12 +584,8 @@ final class Sample(Range, UniformRNG)
     {
         typeof(this) save() @property
         {
-            auto ret = new typeof(this)(_input.save, _rng.save);
-            ret._available = this._available;
-            ret._toSelect = this._toSelect;
-            ret._Vprime = this._Vprime;
-            ret._index = this._index;
-            ret._skip = this._skip;
+            auto ret = new typeof(this)(this);
+            ret._rng = this._rng.save;
             return ret;
         }
     }
