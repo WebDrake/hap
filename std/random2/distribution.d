@@ -26,6 +26,10 @@
  * may produce unexpected and incorrect behaviour when combined with
  * these objects.
  *
+ * Note: $(D std.random2.distribution.dice) uses a different algorithm
+ * to its $(D std.random) counterpart and so will produce different
+ * results.
+ *
  * Copyright: © 2008-2011 Andrei Alexandrescu,
  *              2013      Nils Boßung (enum-based uniform distribution),
  *              2013      Chris Cain (discrete distribution),
@@ -60,6 +64,9 @@ import std.range, std.traits;
  * ----
  *
  * The range counterpart of $(D dice) is the $(D DiscreteDistribution) class.
+ *
+ * Note: given an identically-seeded RNG as input, $(D std.random2.dice)
+ * will produce different values to $(D std.random.dice).
  */
 size_t dice(UniformRNG, Num)(UniformRNG rng, Num[] proportions...)
     if (isNumeric!Num && isForwardRange!UniformRNG)

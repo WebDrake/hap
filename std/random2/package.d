@@ -34,11 +34,15 @@
  * std.random, and corrects a number of issues found in that module.  In
  * particular, it implements random number generators and related entities as
  * reference types rather than value types.  It is however largely derivative
- * of std.random and to the greatest extent possible implements the same API,
- * with some functional additions, notably the random distribution range types.
+ * of $(D std.random) and to the greatest extent possible implements the same
+ * API, with some functional additions, notably the random distribution ranges.
  *
- * Bear in mind that non-reference-type RNGs used in conjunction with this
- * package will almost certainly generate erroneous results.  In particular
+ * Note: Currently only one function is known to produce different behaviour to
+ * its counterpart in $(D std.random): $(D std.random2.distribution.dice) uses
+ * a different algorithm to $(D std.random.dice).
+ *
+ * Warning: Bear in mind that non-reference-type RNGs used in conjunction with
+ * this package will almost certainly generate erroneous results.  In particular
  * this package should not be used together with std.random itself.
  *
  * Copyright: © 2008-2011 Andrei Alexandrescu,
