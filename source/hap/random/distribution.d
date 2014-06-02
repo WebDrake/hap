@@ -897,11 +897,14 @@ unittest
     foreach (T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
                            int, uint, long, ulong, float, double, real))
     {
-        T lo = 0, hi = 100;
-        T init = uniform(lo, hi);
-        size_t i = 50;
-        while (--i && uniform(lo, hi) == init) {}
-        assert(i > 0);
+        foreach (boundaries; TypeTuple!("[)", "(]", "[]", "()"))
+        {
+            T lo = 0, hi = 100;
+            T init = uniform!boundaries(lo, hi);
+            size_t i = 50;
+            while (--i && uniform!boundaries(lo, hi) == init) {}
+            assert(i > 0);
+        }
     }
 
     auto reproRng = new Xorshift(239842);
@@ -909,11 +912,14 @@ unittest
     foreach (T; TypeTuple!(char, wchar, dchar, byte, ubyte, short,
                           ushort, int, uint, long, ulong))
     {
-        T lo = T.min + 10, hi = T.max - 10;
-        T init = uniform(lo, hi, reproRng);
-        size_t i = 50;
-        while (--i && uniform(lo, hi, reproRng) == init) {}
-        assert(i > 0);
+        foreach (boundaries; TypeTuple!("[)", "(]", "[]", "()"))
+        {
+            T lo = T.min + 10, hi = T.max - 10;
+            T init = uniform!boundaries(lo, hi, reproRng);
+            size_t i = 50;
+            while (--i && uniform!boundaries(lo, hi, reproRng) == init) {}
+            assert(i > 0);
+        }
     }
 
     {
@@ -1143,32 +1149,17 @@ unittest
         foreach (T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
                                int, uint, long, ulong, float, double, real))
         {
-            static assert(isRandomDistribution!(UniformDistribution!("[]", T, UniformRNG)));
-            static assert(isRandomDistribution!(UniformDistribution!("[)", T, UniformRNG)));
-            static assert(isRandomDistribution!(UniformDistribution!("(]", T, UniformRNG)));
-            static assert(isRandomDistribution!(UniformDistribution!("()", T, UniformRNG)));
-
-            T min = 0, max = 10;
-            auto rng = new UniformRNG(unpredictableSeed);
-
-            foreach (u; uniformDistribution!"[]"(min, max, rng.save).take(100))
+            foreach (boundaries; TypeTuple!("[)", "(]", "[]", "()"))
             {
-                assert(u == uniform!"[]"(min, max, rng));
-            }
+                static assert(isRandomDistribution!(UniformDistribution!(boundaries, T, UniformRNG)));
 
-            foreach (u; uniformDistribution!"[)"(min, max, rng.save).take(100))
-            {
-                assert(u == uniform!"[)"(min, max, rng));
-            }
+                T min = 0, max = 10;
+                auto rng = new UniformRNG(unpredictableSeed);
 
-            foreach (u; uniformDistribution!"(]"(min, max, rng.save).take(100))
-            {
-                assert(u == uniform!"(]"(min, max, rng));
-            }
-
-            foreach (u; uniformDistribution!"()"(min, max, rng.save).take(100))
-            {
-                assert(u == uniform!"()"(min, max, rng));
+                foreach (u; uniformDistribution!boundaries(min, max, rng.save).take(100))
+                {
+                    assert(u == uniform!boundaries(min, max, rng));
+                }
             }
         }
     }
