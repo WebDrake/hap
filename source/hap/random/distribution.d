@@ -454,7 +454,11 @@ final class NormalDistribution(T, UniformRNG)
 
     this(typeof(this) that)
     {
-        this(that.mean, that.stdev, that._rng);
+        this.mean = that.mean;
+        this.stdev = that.stdev;
+        this._engine = that._engine;
+        this._rng = that._rng;
+        this._value = that._value;
     }
 
     /// Range primitives.
@@ -530,8 +534,11 @@ unittest
     }
 
     // check save works effectively
+    foreach (UniformRNG; UniformRNGTypes)
     {
-        auto ndist = normalDistribution(3.29, 7.64);
+        auto rng = new UniformRNG(unpredictableSeed);
+        auto ndist = normalDistribution(3.29, 7.64, rng);
+        ndist.popFront();
         auto ndist2 = ndist.save;
         assert(ndist2 !is ndist);
 
