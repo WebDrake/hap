@@ -222,6 +222,8 @@ unittest
  * result of the roll of a random die with relative probabilities
  * stored in the range $(D proportions).  Each successive value of
  * $(D front) reflects the index in $(D proportions) that was chosen.
+ * If no random number generator is specified, the default $(D rndGen)
+ * will be used as the source of randomness.
  *
  * This offers a superior option in the event of making many rolls
  * of the same die, as the sum and CDF of $(D proportions) only needs
@@ -425,7 +427,7 @@ unittest
  * Returns a floating-point number drawn from a normal (Gaussian)
  * distribution with mean $(D mu) and standard deviation $(D sigma).
  * If no random number generator is specified, the default $(D rndGen)
- * will be used.
+ * will be used as the source of randomness.
  *
  * Note that this function uses two variates from the uniform random
  * number generator to generate a single normally-distributed variate.
@@ -485,9 +487,8 @@ unittest
 /**
  * Provides an infinite range of random numbers distributed according to the
  * normal (Gaussian) distribution with mean $(D mu) and standard deviation
- * $(D sigma).  The version that does not receive a specified random number
- * generator uses the default generator $(D rndGen) as its source of
- * randomness.
+ * $(D sigma).  If no random number generator is specified, the default
+ * $(D rndGen) will be used as the source of randomness.
  */
 final class NormalDistribution(T, UniformRNG)
     if (isFloatingPoint!T && isUniformRNG!UniformRNG)
@@ -700,8 +701,9 @@ unittest
  * parameter controls the shape of the interval (open vs. closed on
  * either side). Valid values for $(D boundaries) are $(D "[]"), $(D
  * "$(LPAREN)]"), $(D "[$(RPAREN)"), and $(D "()"). The default interval
- * is closed to the left and open to the right. The version that does not
- * take $(D rng) uses the default generator $(D rndGen).
+ * is closed to the left and open to the right.  If no random number
+ * generator is specified, the default $(D rndGen) will be used as the
+ * source of randomness.
  *
  * Example:
  *
@@ -1131,9 +1133,9 @@ unittest
  * $(D a) and $(D b).  The $(D boundaries) parameter controls the shape of the
  * interval (open vs. closed on either side).  Valid values for $(D boundaries)
  * are $(D "[]"), $(D "$(LPAREN)]"), $(D "[$(RPAREN)"), and $(D "()"). The
- * default interval is closed to the left and open to the right. The version
- * that does not receive a specified random number generator uses the default
- * generator $(D rndGen).
+ * default interval is closed to the left and open to the right. If no random
+ * number generator is specified, the default $(D rndGen) will be used as the
+ * source of randomness.
  */
 final class UniformDistribution(string boundaries = "[)", T, UniformRNG)
     if ((isNumeric!T || isSomeChar!T) && isUniformRNG!UniformRNG)
@@ -1292,7 +1294,8 @@ unittest
 /**
  * Generates an infinite sequence of uniformly-distributed numbers in the
  * range $(D [T.min, T.max]) for any integral type $(D T).  If no random
- * number generator is specified, the default $(D rndGen) will be used.
+ * number generator is specified, the default $(D rndGen) will be used as
+ * the source of randomness.
  */
 final class UniformDistribution(T, UniformRNG)
     if (!is(T == enum) && (isIntegral!T || isSomeChar!T)
@@ -1400,7 +1403,7 @@ unittest
 /**
  * Generates an infinite sequence of uniformly selected members of
  * enum $(D E). If no random number generator is specified, the
- * default $(D rndGen) will be used.
+ * default $(D rndGen) will be used as the source of randomness.
  */
 final class UniformDistribution(E, UniformRNG)
     if (is(E == enum) && isUniformRNG!UniformRNG)
