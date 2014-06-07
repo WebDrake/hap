@@ -422,6 +422,67 @@ unittest
 }
 
 /**
+ * Returns a floating-point number drawn from a normal (Gaussian)
+ * distribution with mean $(D mu) and standard deviation $(D sigma).
+ * If no random number generator is specified, the default $(D rndGen)
+ * will be used.
+ *
+ * Note that this function uses two variates from the uniform random
+ * number generator to generate a single normally-distributed variate.
+ * It is therefore an inefficient means of generating a large number of
+ * normally-distributed variates.  If you wish to draw many variates
+ * from the normal distribution, it is better to use the range-based
+ * $(D normalDistribution) instead.
+ */
+auto normal(T1, T2)(T1 mu, T2 sigma)
+    if (isNumeric!T1 && isNumeric!T2)
+{
+    return normal!(T1, T2, Random)(mu, sigma, rndGen);
+}
+
+/// ditto
+auto normal(T1, T2, UniformRNG)(T1 mu, T2 sigma, UniformRNG rng)
+    if (isNumeric!T1 && isNumeric!T2 && isUniformRNG!UniformRNG)
+{
+    import std.math;
+
+    static if (isFloatingPoint!(CommonType!(T1, T2)))
+    {
+        alias T = CommonType!(T1, T2);
+    }
+    else
+    {
+        alias T = double;
+    }
+
+    immutable T _r1 = uniform01!T(rng);
+    immutable T _r2 = uniform01!T(rng);
+
+    return sqrt(-2 * log(1 - _r2)) * cos(2 * PI * _r1) * sigma + mu;
+}
+
+unittest
+{
+    // Compare to behaviour of NormalDistribution
+    foreach (UniformRNG; UniformRNGTypes)
+    {
+        auto rng = new UniformRNG(unpredictableSeed);
+        auto ndist = normalDistribution(3.29, 7.64, rng.save);
+
+        static assert(is(CommonType!(double, double) == double));
+
+        foreach (immutable _; 0 .. 100)
+        {
+            import std.math;
+            auto val = normal(3.29, 7.64, rng);
+            assert(approxEqual(val, ndist.front));
+            ndist.popFront();
+            ndist.popFront();
+        }
+    }
+}
+
+/**
  * Provides an infinite range of random numbers distributed according to the
  * normal (Gaussian) distribution with mean $(D mu) and standard deviation
  * $(D sigma).  The version that does not receive a specified random number
