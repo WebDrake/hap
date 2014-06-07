@@ -1,6 +1,33 @@
 D = <span class="d_inlinecode">$0</span>
+D_PARAM   = <span class="d_param">$0</span>
 HAPSRC = $(LINK2 https://github.com/WebDrake/hap/blob/master/source/$0, $0)
 HTTP = $(LINK2 http://$1,$2)
 HTTPS = $(LINK2 https://$1,$2)
 PHOBOSXREF = <a href="http://dlang.org/phobos/std_$1.html#$2">$(D std.$1.$2)</a>
 WEB = $(HTTP $1,$2)
+
+BR =	<br>
+DDOC_DITTO     = $(BR)$0
+DDOC_SUMMARY   = $0$(P)
+DDOC_DESCRIPTION = $0$(P)
+DDOC_AUTHORS   = $(B Authors:)$(BR)$0$(P)
+DDOC_BUGS      = $(RED BUGS:)$(BR)$0$(P)
+DDOC_COPYRIGHT = $(B Copyright:)$(BR)$0$(P)
+DDOC_DATE      = $(B Date:)$(BR)$0$(P)
+DDOC_DEPRECATED = $(RED Deprecated:)$(BR)$0$(P)
+DDOC_EXAMPLES  = $(B Examples:)$(BR)$0$(P)
+DDOC_HISTORY   = $(B History:)$(BR)$0$(P)
+DDOC_LICENSE   = $(B License:)$(BR)$0$(P)
+DDOC_RETURNS   = $(B Returns:)$(BR)$0$(P)
+DDOC_SEE_ALSO  = $(B See Also:)$(BR)$0$(P)
+DDOC_STANDARDS = $(B Standards:)$(BR)$0$(P)
+DDOC_THROWS    = $(B Throws:)$(BR)$0$(P)
+DDOC_VERSION   = $(B Version:)$(BR)$0$(P)
+DDOC_SECTION_H = $(B $0)$(BR)
+DDOC_SECTION   = $0$(P)
+DDOC_PARAMS    = $(B Parameters:)<table class=parms>$0</table>$(P)
+DDOC_BLANKLINE	= $(P)
+
+DDOC_PSYMBOL = <a name="$0"></a><span class="ddoc_psymbol">$0</span>
+DDOC_ANCHOR = <a name=".$1"></a>
+DDOC_DECL  = <dt class="d_decl">$0</dt>

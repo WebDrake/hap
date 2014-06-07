@@ -596,7 +596,7 @@ final class Sample(Range, UniformRNG)
         return _toSelect;
     }
 
-    /// Returns the index of the visited record.
+    /// Returns the _index of the visited record.
     size_t index()
     in
     {

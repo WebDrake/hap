@@ -20,13 +20,13 @@
  * are provided in a separate module (currently experimental).
  *
  * Copyright: © 2008-2011 Andrei Alexandrescu,
- *              2011      Masahiro Nakagawa (Xorshift generator),
+ *              2011      Masahiro Nakagawa,
  *              2013-2014 Joseph Rushton Wakeling
  *
  * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
  *
  * Authors: $(WEB erdani.org, Andrei Alexandrescu),
- *          Masahiro Nakagawa (Xorshift random generator),
+ *          Masahiro Nakagawa (Xorshift random _generator),
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
  * Source: $(HAPSRC hap/random/_generator.d)

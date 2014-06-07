@@ -3,15 +3,15 @@
 /**
  * Implements algorithms for generating random numbers drawn from
  * different statistical distributions.  Where possible, each random
- * distribution is provided in two different forms:
+ * _distribution is provided in two different forms:
  *
  * $(UL
- *   $(LI as a function, which takes as input the distribution
+ *   $(LI as a function, which takes as input the _distribution
  *        parameters and a uniform RNG, and returns a single value
  *        drawn from the distribution, and)
  *   $(LI as a range object, which wraps a uniform RNG instance and
  *        transforms its output into numbers drawn from the specified
- *        distribution.)
+ *        _distribution.)
  * )
  *
  * Typical reasons for rejecting a function implementation include
@@ -19,14 +19,14 @@
  * adequate performance, or the function needing to allocate memory
  * with each call.
  *
- * As with random number generators, the random distribution range
+ * As with random number generators, the random _distribution range
  * objects implemented here are final classes in order to ensure
  * reference semantics.  They also assume reference type semantics on
  * the part of the RNGs that they wrap: user-supplied value-type RNGs
  * may produce unexpected and incorrect behaviour when combined with
  * these objects.
  *
- * Note: $(D hap._random.distribution.dice) uses a different algorithm
+ * Note: $(D hap._random._distribution.dice) uses a different algorithm
  * to its $(D std.random) counterpart and so will produce different
  * results.
  *
@@ -65,8 +65,8 @@ import std.range, std.traits;
  *
  * The range counterpart of $(D dice) is the $(D DiscreteDistribution) class.
  *
- * Note: given an identically-seeded RNG as input, $(D hap.random.dice)
- * will produce different values to $(D std.random.dice).
+ * Note: given an identically-seeded RNG as input, $(D hap.random.distribution._dice)
+ * will produce different values to $(D std.random._dice).
  */
 size_t dice(UniformRNG, Num)(UniformRNG rng, Num[] proportions...)
     if (isNumeric!Num && isForwardRange!UniformRNG)
@@ -424,7 +424,7 @@ unittest
 }
 
 /**
- * Returns a floating-point number drawn from a normal (Gaussian)
+ * Returns a floating-point number drawn from a _normal (Gaussian)
  * distribution with mean $(D mu) and standard deviation $(D sigma).
  * If no random number generator is specified, the default $(D rndGen)
  * will be used as the source of randomness.
@@ -433,7 +433,7 @@ unittest
  * number generator to generate a single normally-distributed variate.
  * It is therefore an inefficient means of generating a large number of
  * normally-distributed variates.  If you wish to draw many variates
- * from the normal distribution, it is better to use the range-based
+ * from the _normal distribution, it is better to use the range-based
  * $(D normalDistribution) instead.
  */
 auto normal(T1, T2)(T1 mu, T2 sigma)
@@ -1497,7 +1497,7 @@ unittest
  * of randomness.
  *
  * $(D uniform01) offers a faster generation of random variates than
- * the equivalent $(D uniform!"[)"(0.0, 1.0)) and so may be preferred
+ * the equivalent $(D uniform!"[&#41;"(0.0, 1.0)) and so may be preferred
  * for some applications.
  */
 T uniform01(T = double)()

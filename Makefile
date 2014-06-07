@@ -29,7 +29,7 @@ unittest: unit unit-xper
 	./unit-xper
 
 doc: $(SRC) $(EXPERIMENTAL)
-	$(DC) -I./source -o- -Ddhtml $^ doc.ddoc
+	$(DC) -I./source -o- -Ddhtml $^ doc.ddoc template.ddoc
 
 .PHONY: clean
 

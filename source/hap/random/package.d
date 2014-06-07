@@ -1,26 +1,22 @@
 // Written in the D programming language.
 
 /**
- * Implements _random number generation and related functionality such as
- * sampling, shuffling and so on.  Some of the functions and entities
- * provided here are semantically equivalent or similar to those in the
- * $(D $(LESS)_random$(GREATER)) header in the C++ Standard Template
- * Library.
- *
- * $(D hap._random) is intended as a replacement for Phobos' $(D std._random),
- * and addresses a number of issues encountered in that module.  In particular,
+ * $(D hap._random) is a _random number generation library for the D programming
+ * language.  It is intended as a replacement for Phobos’ $(D std._random), and
+ * addresses a number of issues encountered in that module: in particular,
  * $(D hap._random) implements _random number generators and related entities as
- * reference types rather than value types.  It is however largely derivative
+ * reference types rather than value types, which avoids a number of problems
+ * that can arise with the standard library RNGs.  It is however largely derivative
  * of $(D std._random) and to the greatest extent possible implements the same
  * API, with some functional additions, notably the _random distribution ranges.
  *
- * The library name, $(I hap), is Welsh for "_random" or "chance". :-)
+ * The library name, $(I hap), is Welsh for “_random” or “chance”. :-)
  *
  * The functionality implemented by this package is divided into four
  * different groups:
  *
  * $(UL
- *   $(LI $(B _random number generators), deterministic pseudo-random algorithms;)
+ *   $(LI $(B _random number generators), deterministic pseudo-_random algorithms;)
  *   $(LI $(B _random distributions);)
  *   $(LI $(B _random adaptors), such as shuffling or sampling objects;)
  *   $(LI $(B traits) related to _random number generation.)
@@ -46,16 +42,16 @@
  * $(UL
  *   $(LI replace $(D import std._random) with $(D import hap._random))
  *   $(LI insert $(D new) before every instantiation of an RNG.  For example,
- *     instead of "$(D auto rng = Random(unpredictableSeed))" put instead,
- *     "$(D auto rng = new Random(unpredictableSeed))".)
+ *     instead of $(D auto rng = Random(unpredictableSeed)) put instead,
+ *     $(D auto rng = new Random(unpredictableSeed)).)
  *   $(LI optionally, the functions $(D randomCover), $(D randomSample) and
  *     $(D randomShuffle) may be replaced by $(D cover), $(D sample) and
  *     $(D shuffle); however, this is optional, not required.)
  * )
  *
  * Note: Currently only one function is known to produce different behaviour to
- * its counterpart in $(D std._random): $(D hap._random.distribution.dice) uses
- * a different algorithm to $(D std._random.dice).
+ * its $(D std._random) counterpart: $(D hap._random.distribution.dice) uses a
+ * different algorithm to $(D std._random.dice).
  *
  * Warning: Bear in mind that non-reference-type RNGs used in conjunction with
  * this package will almost certainly generate erroneous results.  In particular
