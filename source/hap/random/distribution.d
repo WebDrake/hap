@@ -1043,8 +1043,8 @@ unittest
                 {
                     auto u = uniform!"[]"(T.min, T.max, rng);
                     static assert(is(typeof(u) == T));
-                    assert(T.min <= u);
-                    assert(u <= T.max);
+                    assert(T.min <= u, "Lower bound violation for uniform!\"[]\"(" ~ T.stringof ~ ")");
+                    assert(u <= T.max, "Upper bound violation for uniform!\"[]\"(" ~ T.stringof ~ ")");
                 }
             }
         }
@@ -1132,6 +1132,9 @@ auto uniform(T, UniformRNG)(UniformRNG rng)
     if (!is(T == enum) && (isIntegral!T || isSomeChar!T)
         && isUniformRNG!UniformRNG)
 {
+    /* dchar does not use its full bit range, so we must
+     * revert to using uniform with specified bounds
+     */
     static if (is(T == dchar))
     {
         return uniform!"[]"(T.min, T.max, rng);
@@ -1186,8 +1189,8 @@ unittest
             {
                 auto u = uniform!T(rng);
                 static assert(is(typeof(u) == T));
-                assert(T.min <= u);
-                assert(u <= T.max);
+                assert(T.min <= u, "Lower bound violation for uniform!" ~ T.stringof);
+                assert(u <= T.max, "Upper bound violation for uniform!" ~ T.stringof);
             }
         }
     }
