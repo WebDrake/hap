@@ -662,38 +662,42 @@ private struct NormalEngineBoxMuller(T)
 unittest
 {
     NormalEngineBoxMuller!double engine;
-    auto rng1 = new Random(unpredictableSeed);
-    auto rng2 = rng1.save;
-    auto rng3 = rng1.save;
-    double mu = 6.5, sigma = 3.2;
 
-    /* The Box-Muller engine produces variates a pair at
-     * a time.  We verify this is true by using a pair of
-     * pseudo-random number generators sharing the same
-     * initial state.
-     */
-    auto a1 = engine(mu, sigma, rng1);
-    auto b2 = engine(mu, sigma, rng2);
+    foreach (UniformRNG; UniformRNGTypes)
+    {
+        auto rng1 = new UniformRNG(unpredictableSeed);
+        auto rng2 = rng1.save;
+        auto rng3 = rng1.save;
+        double mu = 6.5, sigma = 3.2;
 
-    // verify that 1st RNG has been called but 2nd has not
-    assert(rng3.front != rng1.front);
-    assert(rng3.front == rng2.front);
+        /* The Box-Muller engine produces variates a pair at
+         * a time.  We verify this is true by using a pair of
+         * pseudo-random number generators sharing the same
+         * initial state.
+         */
+        auto a1 = engine(mu, sigma, rng1);
+        auto b2 = engine(mu, sigma, rng2);
 
-    /* Now, calling with the RNG order reversed should
-     * produce the same results: only rng2 will get called
-     * this time.
-     */
-    auto a2 = engine(mu, sigma, rng2);
-    auto b1 = engine(mu, sigma, rng1);
+        // verify that 1st RNG has been called but 2nd has not
+        assert(rng3.front != rng1.front);
+        assert(rng3.front == rng2.front);
 
-    assert(a1 == a2);
-    assert(b1 == b2);
-    assert(rng2.front == rng1.front);
-    assert(rng3.front != rng2.front);
+        /* Now, calling with the RNG order reversed should
+         * produce the same results: only rng2 will get called
+         * this time.
+         */
+        auto a2 = engine(mu, sigma, rng2);
+        auto b1 = engine(mu, sigma, rng1);
 
-    // verify that the RNGs have each been called twice
-    rng3.popFrontN(2);
-    assert(rng3.front == rng2.front);
+        assert(a1 == a2);
+        assert(b1 == b2);
+        assert(rng2.front == rng1.front);
+        assert(rng3.front != rng2.front);
+
+        // verify that the RNGs have each been called twice
+        rng3.popFrontN(2);
+        assert(rng3.front == rng2.front);
+    }
 }
 
 /**
