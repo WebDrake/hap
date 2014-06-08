@@ -1400,7 +1400,8 @@ final class UniformDistribution(T, UniformRNG)
 
     this(typeof(this) that)
     {
-        this(that._rng);
+        this._rng = that._rng;
+        this._value = that._value;
     }
 
     /// Range primitives.
@@ -1461,21 +1462,16 @@ unittest
             foreach (u; udist.take(100))
             {
                 assert(uniform!T(rng) == u);
+                assert(u <= T.max);
+                assert(u >= T.min);
             }
 
-            /* Limit this next test to integral types to avoid invalid UTF8
-             * code point errors.
-             */
-            static if (isIntegral!T)
+            // check that .save works
+            auto udist2 = udist.save;
+            assert(udist2 !is udist);
+            foreach (u1, u2; lockstep(udist.take(100), udist2.take(100)))
             {
-                auto udist2 = uniformDistribution!T();
-
-                foreach (u; udist2.take(100))
-                {
-                    import std.string : format;
-                    assert(u <= T.max, format("Random variate %s > %s (%s.max)", u, T.max, T.stringof));
-                    assert(u >= T.min, format("Random variate %s < %s (%s.min)", u, T.min, T.stringof));
-                }
+                assert(u1 == u2);
             }
         }
     }
@@ -1507,7 +1503,8 @@ final class UniformDistribution(E, UniformRNG)
 
     this(typeof(this) that)
     {
-        this(that._rng);
+        this._rng = that._rng;
+        this._value = that._value;
     }
 
     /// Range primitives.
@@ -1568,6 +1565,15 @@ unittest
         foreach (immutable f; uniformDistribution!Fruit(rng).take(100))
         {
             assert(f == Fruit.Apple || f == Fruit.Mango || f == Fruit.Pear);
+        }
+
+        // check that .save works
+        auto udist1 = uniformDistribution!Fruit(rng);
+        auto udist2 = udist1.save;
+        assert(udist2 !is udist1);
+        foreach (u1, u2; lockstep(udist1.take(100), udist2.take(100)))
+        {
+            assert(u1 == u2);
         }
     }
 }
@@ -1685,7 +1691,8 @@ final class Uniform01Distribution(T, UniformRNG)
 
     this(typeof(this) that)
     {
-        this(that._rng);
+        this._rng = that._rng;
+        this._value = that._value;
     }
 
     /// Range primitives.
@@ -1748,6 +1755,15 @@ unittest
                 assert(u == uniform01!T(rng));
                 assert(0 <= u);
                 assert(u < 1);
+            }
+
+            // check that .save works
+            auto udist1 = uniform01Distribution(rng);
+            auto udist2 = udist1.save;
+            assert(udist2 !is udist1);
+            foreach (u1, u2; lockstep(udist1.take(100), udist2.take(100)))
+            {
+                assert(u1 == u2);
             }
         }
     }
