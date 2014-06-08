@@ -924,10 +924,16 @@ body
         enforce(lower <= b,
                 text("hap.random.distribution.uniform(): invalid bounding interval ",
                         boundaries[0], a, ", ", b, boundaries[1]));
-        if (b == ResultType.max && lower == ResultType.min)
+        /* Cannot use this next optimization with dchar, as dchar
+         * only partially uses its full bit range
+         */
+        static if (!is(ResultType == dchar))
         {
-            // Special case - all bits are occupied
-            return uniform!ResultType(rng);
+            if (b == ResultType.max && lower == ResultType.min)
+            {
+                // Special case - all bits are occupied
+                return uniform!ResultType(rng);
+            }
         }
         auto upperDist = unsigned(b - lower) + 1u;
     }
@@ -959,26 +965,71 @@ body
 unittest
 {
     import std.conv, std.typetuple;
-    auto gen = new Mt19937(unpredictableSeed);
-    static assert(isForwardRange!(typeof(gen)));
 
-    auto a = uniform(0, 1024, gen);
-    assert(0 <= a && a <= 1024);
-    auto b = uniform(0.0f, 1.0f, gen);
-    assert(0 <= b && b < 1, to!string(b));
-    auto c = uniform(0.0, 1.0);
-    assert(0 <= c && c < 1);
-
-    foreach (T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
-                           int, uint, long, ulong, float, double, real))
+    foreach (UniformRNG; UniformRNGTypes)
     {
-        foreach (boundaries; TypeTuple!("[)", "(]", "[]", "()"))
+        auto rng = new UniformRNG(unpredictableSeed);
+
+        auto a = uniform(0, 1024, rng);
+        assert(0 <= a && a <= 1024);
+        auto b = uniform(0.0f, 1.0f, rng);
+        assert(0 <= b && b < 1, to!string(b));
+        auto c = uniform(0.0, 1.0);
+        assert(0 <= c && c < 1);
+
+        foreach (T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
+                               int, uint, long, ulong, float, double, real))
         {
-            T lo = 0, hi = 100;
-            T init = uniform!boundaries(lo, hi);
-            size_t i = 50;
-            while (--i && uniform!boundaries(lo, hi) == init) {}
-            assert(i > 0);
+            foreach (boundaries; TypeTuple!("[)", "(]", "[]", "()"))
+            {
+                T lo = 0, hi = 100;
+                T init = uniform!boundaries(lo, hi, rng);
+                size_t i = 50;
+                while (--i && uniform!boundaries(lo, hi, rng) == init) {}
+                assert(i > 0);
+
+                foreach (immutable _; 0 .. 100)
+                {
+                    auto u1 = uniform!boundaries(lo, hi, rng);
+                    auto u2 = uniform!boundaries(lo, hi);
+
+                    static if (boundaries[0] == '(')
+                    {
+                        assert(lo < u1);
+                        assert(lo < u2);
+                    }
+                    else
+                    {
+                        assert(lo <= u1);
+                        assert(lo <= u2);
+                    }
+
+                    static if (boundaries[1] == ']')
+                    {
+                        assert(u1 <= hi);
+                        assert(u2 <= hi);
+                    }
+                    else
+                    {
+                        assert(u1 < hi);
+                        assert(u2 < hi);
+                    }
+                }
+            }
+
+            /* test case with closed boundaries covering whole range
+             * of integral type
+             */
+            static if (isIntegral!T || isSomeChar!T)
+            {
+                foreach (immutable _; 0 .. 100)
+                {
+                    auto u = uniform!"[]"(T.min, T.max, rng);
+                    static assert(is(typeof(u) == T));
+                    assert(T.min <= u);
+                    assert(u <= T.max);
+                }
+            }
         }
     }
 
@@ -1064,18 +1115,25 @@ auto uniform(T, UniformRNG)(UniformRNG rng)
     if (!is(T == enum) && (isIntegral!T || isSomeChar!T)
         && isUniformRNG!UniformRNG)
 {
-    auto r = rng.front;
-    rng.popFront();
-    static if (T.sizeof <= r.sizeof)
+    static if (is(T == dchar))
     {
-        return cast(T) r;
+        return uniform!"[]"(T.min, T.max, rng);
     }
     else
     {
-        static assert(T.sizeof == 8 && r.sizeof == 4);
-        T r1 = rng.front | (cast(T)r << 32);
+        auto r = rng.front;
         rng.popFront();
-        return r1;
+        static if (T.sizeof <= r.sizeof)
+        {
+            return cast(T) r;
+        }
+        else
+        {
+            static assert(T.sizeof == 8 && r.sizeof == 4);
+            T r1 = rng.front | (cast(T)r << 32);
+            rng.popFront();
+            return r1;
+        }
     }
 }
 
@@ -1097,6 +1155,24 @@ unittest
         while (--i && uniform!T() == init) {}
         assert(i > 0);
         assert(i < 50);
+
+        foreach (UniformRNG; UniformRNGTypes)
+        {
+            auto rng = new UniformRNG(unpredictableSeed);
+            init = uniform!T(rng);
+            i = 50;
+            while (--i && uniform!T(rng) == init) {}
+            assert(i > 0);
+            assert(i < 50);
+
+            foreach (immutable _; 0 .. 100)
+            {
+                auto u = uniform!T(rng);
+                static assert(is(typeof(u) == T));
+                assert(T.min <= u);
+                assert(u <= T.max);
+            }
+        }
     }
 }
 
