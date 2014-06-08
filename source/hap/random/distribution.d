@@ -374,7 +374,7 @@ auto discreteDistribution(SearchPolicy search = SearchPolicy.binarySearch, Num)
 
 unittest
 {
-    foreach (UniformRNG; TypeTuple!(UniformRNGTypes))
+    foreach (UniformRNG; UniformRNGTypes)
     {
         auto rng = new UniformRNG(unpredictableSeed);
 
@@ -742,31 +742,34 @@ auto uniform(string boundaries = "[)", T1, T2)
 
 unittest
 {
-    //MinstdRand0 gen;
-    auto gen = new Mt19937;
-    foreach (i; 0 .. 20)
+    foreach (UniformRNG; UniformRNGTypes)
     {
-        auto x = uniform(0.0, 15.0, gen);
-        assert(0 <= x && x < 15);
-    }
-    foreach (i; 0 .. 20)
-    {
-        auto x = uniform!"[]"('a', 'z', gen);
-        assert('a' <= x && x <= 'z');
-    }
+        auto rng = new UniformRNG(unpredictableSeed);
 
-    foreach (i; 0 .. 20)
-    {
-        auto x = uniform('a', 'z', gen);
-        assert('a' <= x && x < 'z');
-    }
+        foreach (i; 0 .. 20)
+        {
+            auto x = uniform(0.0, 15.0, rng);
+            assert(0 <= x && x < 15);
+        }
+        foreach (i; 0 .. 20)
+        {
+            auto x = uniform!"[]"('a', 'z', rng);
+            assert('a' <= x && x <= 'z');
+        }
 
-    foreach(i; 0 .. 20)
-    {
-        immutable ubyte a = 0;
+        foreach (i; 0 .. 20)
+        {
+            auto x = uniform('a', 'z', rng);
+            assert('a' <= x && x < 'z');
+        }
+
+        foreach(i; 0 .. 20)
+        {
+            immutable ubyte a = 0;
             immutable ubyte b = 15;
-        auto x = uniform(a, b, gen);
+            auto x = uniform(a, b, rng);
             assert(a <= x && x < b);
+        }
     }
 }
 
@@ -1222,6 +1225,21 @@ unittest
     }
 }
 
+unittest
+{
+    enum Fruit { Apple = 12, Mango = 29, Pear = 72 }
+    foreach (UniformRNG; UniformRNGTypes)
+    {
+        auto rng = new UniformRNG(unpredictableSeed);
+        foreach (immutable _; 0 .. 100)
+        {
+            foreach (immutable f; [uniform!Fruit, rng.uniform!Fruit])
+            {
+                assert(f == Fruit.Apple || f == Fruit.Mango || f == Fruit.Pear);
+            }
+        }
+    }
+}
 
 /**
  * Provides an infinite sequence of random numbers uniformly distributed between
@@ -1572,6 +1590,11 @@ unittest
     {
         assert(f == Fruit.Apple || f == Fruit.Mango || f == Fruit.Pear);
     }
+}
+
+unittest
+{
+    enum Fruit { Apple = 12, Mango = 29, Pear = 72 }
 
     foreach (UniformRNG; UniformRNGTypes)
     {
@@ -1648,7 +1671,6 @@ body
 
 unittest
 {
-    import std.typetuple;
     foreach (UniformRNG; UniformRNGTypes)
     {
         foreach (T; TypeTuple!(float, double, real))
