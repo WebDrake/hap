@@ -20,13 +20,13 @@ benchmarkold: benchmarkold.d $(SRC)
 
 unit: $(SRC)
 	$(DC) -I./source -main -unittest -debug -cov -of$@ $^
+	./unit
 
 unit-xper: $(EXPERIMENTAL) $(SRC)
 	$(DC) -I./source -main -unittest -debug -cov -of$@ $^
+	./unit-xper
 
 unittest: unit unit-xper
-	./unit
-	./unit-xper
 
 doc: $(SRC) $(EXPERIMENTAL)
 	$(DC) -I./source -o- -Ddhtml $^ doc.ddoc template.ddoc
