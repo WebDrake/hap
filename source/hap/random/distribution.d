@@ -802,7 +802,7 @@ body
         NumberType _b = b;
     }
     enforce(_a <= _b,
-            format("std.random.uniform(): invalid bounding interval %s%s, %s%s",
+            format("hap.random.distribution.uniform(): invalid bounding interval %s%s, %s%s",
                    boundaries[0], a, b, boundaries[1]));
     NumberType result =
         _a + (_b - _a) * cast(NumberType) (rng.front - rng.min)
@@ -910,7 +910,7 @@ body
     static if (boundaries[0] == '(')
     {
         enforce(a < ResultType.max,
-                text("std.random.uniform(): invalid left bound ", a));
+                text("hap.random.distribution.uniform(): invalid left bound ", a));
         ResultType lower = cast(ResultType) (a + 1);
     }
     else
@@ -921,19 +921,19 @@ body
     static if (boundaries[1] == ']')
     {
         enforce(lower <= b,
-                text("std.random.uniform(): invalid bounding interval ",
+                text("hap.random.distribution.uniform(): invalid bounding interval ",
                         boundaries[0], a, ", ", b, boundaries[1]));
         if (b == ResultType.max && lower == ResultType.min)
         {
             // Special case - all bits are occupied
-            return std.random.uniform!ResultType(rng);
+            return uniform!ResultType(rng);
         }
         auto upperDist = unsigned(b - lower) + 1u;
     }
     else
     {
         enforce(lower < b,
-                text("std.random.uniform(): invalid bounding interval ",
+                text("hap.random.distribution.uniform(): invalid bounding interval ",
                         boundaries[0], a, ", ", b, boundaries[1]));
         auto upperDist = unsigned(b - lower);
     }
@@ -1108,7 +1108,7 @@ auto uniform(E, UniformRNG)
     if (is(E == enum) && isUniformRNG!UniformRNG)
 {
     static immutable E[EnumMembers!E.length] members = [EnumMembers!E];
-    return members[std.random.uniform(0, members.length, rng)];
+    return members[uniform!"[)"(0, members.length, rng)];
 }
 
 /// Ditto
