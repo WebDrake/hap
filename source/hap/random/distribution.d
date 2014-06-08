@@ -763,22 +763,23 @@ auto uniform(string boundaries = "[)", T1, T2, UniformRNG)
     if (isFloatingPoint!(CommonType!(T1, T2)) && isUniformRNG!UniformRNG)
 out (result)
 {
+    // We assume "[)" as the common case
     static if (boundaries[0] == '(')
     {
         assert(a < result);
     }
-    else static if (boundaries[0] == '[')
+    else
     {
         assert(a <= result);
     }
 
-    static if (boundaries[1] == ')')
-    {
-        assert(result < b);
-    }
-    else static if (boundaries[1] == ']')
+    static if (boundaries[1] == ']')
     {
         assert(result <= b);
+    }
+    else
+    {
+        assert(result < b);
     }
 }
 body
