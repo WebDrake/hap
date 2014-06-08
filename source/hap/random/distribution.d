@@ -1475,15 +1475,16 @@ auto uniformDistribution(E)()
 unittest
 {
     enum Fruit { Apple = 12, Mango = 29, Pear = 72 }
+
+    foreach (immutable f; uniformDistribution!Fruit().take(100))
+    {
+        assert(f == Fruit.Apple || f == Fruit.Mango || f == Fruit.Pear);
+    }
+
     foreach (UniformRNG; UniformRNGTypes)
     {
         auto rng = new UniformRNG(unpredictableSeed);
-        foreach (immutable f; uniformDistribution!Fruit().take(100))
-        {
-            assert(f == Fruit.Apple || f == Fruit.Mango || f == Fruit.Pear);
-        }
-
-        foreach (immutable f; uniformDistribution!Fruit().take(100))
+        foreach (immutable f; uniformDistribution!Fruit(rng).take(100))
         {
             assert(f == Fruit.Apple || f == Fruit.Mango || f == Fruit.Pear);
         }
