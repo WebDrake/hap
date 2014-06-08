@@ -420,6 +420,20 @@ unittest
                 }
             }
         }
+
+        // Check .save works
+        {
+            auto ddist1 = discreteDistribution(rng, 10, 3, 9.0);
+            auto ddist2 = ddist1.save;
+
+            assert(ddist1 !is ddist2);
+            assert(ddist1._rng !is ddist2._rng);
+
+            foreach (d1, d2; lockstep(ddist1.take(100), ddist2.take(100)))
+            {
+                assert(d1 == d2);
+            }
+        }
     }
 }
 
