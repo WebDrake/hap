@@ -31,18 +31,32 @@ individually depending on need.
 The experimental module `hap.random.device` must be imported individually
 and should be used with caution; its API may be subject to change.
 
+Migration instructions for `std.random` users are provided in the documentation
+at http://code.braingam.es/hap/random/
+
+`hap.random` should be compatible with compilers using the D frontend 2.065 or
+later.
+
 
 Building/installing
 -------------------
 
 `hap.random` is a source library, and can be used as a `dub` package
-dependency.
+dependency: the dub package is simply called `hap`.
 
 ```
-dub fetch hap.random
+dub fetch hap
 ```
 
-should get you a copy from the `code.dlang.org` repository.
+should get you a copy from the `code.dlang.org` repository.  You can add `hap`
+as a dependency to your projects by adding the following JSON to the `dub.json`
+file:
+
+```JSON
+"dependencies": {
+    "hap": ">=1.0.0-rc.1"
+}
+```
 
 In addition, the included Makefile offers some utilities for developers
 working directly on the library itself:

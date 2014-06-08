@@ -1,5 +1,5 @@
 {
-	"name": "hap.random",
+	"name": "hap",
 	"description": "A next-gen replacement for std.random that implements RNGs as reference types",
 	"authors": ["Joseph Rushton Wakeling", "std.random contributors"],
 	"copyright": "Copyright © 2012-2014 Joseph Rushton Wakeling and std.random contributors",
