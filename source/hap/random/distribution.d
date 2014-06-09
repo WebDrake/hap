@@ -257,7 +257,7 @@ final class DiscreteDistribution(SearchPolicy search, T, UniformRNG)
         }
         else
         {
-            import std.conv;
+            import std.algorithm, std.conv;
             T[] prop = proportions.map!(to!T).array;
         }
 
@@ -423,7 +423,7 @@ unittest
 
         // Check .save works
         {
-            auto ddist1 = discreteDistribution(rng, 10, 3, 9.0);
+            auto ddist1 = discreteDistribution(rng, 10.0, 3.0, 9.0);
             auto ddist2 = ddist1.save;
 
             assert(ddist1 !is ddist2);
