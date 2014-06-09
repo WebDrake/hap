@@ -614,6 +614,10 @@ unittest
     {
         auto rng = new UniformRNG(unpredictableSeed);
         auto ndist = normalDistribution(3.29, 7.64, rng);
+        /* Box-Muller generates normal variates a pair at a time.
+         * advancing to the second of these helps verify that the
+         * .save method is truly copying the source distribution.
+         */
         ndist.popFront();
         auto ndist2 = ndist.save;
         assert(ndist2 !is ndist);
