@@ -58,16 +58,16 @@
  * this package should not be used together with $(D std._random) itself.
  *
  * Copyright: © 2008-2011 Andrei Alexandrescu,
- *              2013      Nils Boßung,
  *              2013      Chris Cain,
+ *              2013      Andrej Mitrovi&cacute;,
  *              2011      Masahiro Nakagawa,
  *              2012-2014 Joseph Rushton Wakeling
  *
  * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
  *
  * Authors: $(WEB erdani.org, Andrei Alexandrescu),
- *          Nils Boßung,
  *          Chris Cain,
+ *          Andrej Mitrovi&cacute;,
  *          Masahiro Nakagawa,
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *

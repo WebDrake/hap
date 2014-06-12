@@ -31,15 +31,15 @@
  * results.
  *
  * Copyright: © 2008-2011 Andrei Alexandrescu,
- *              2013      Nils Boßung (enum-based uniform distribution),
- *              2013      Chris Cain (discrete distribution),
+ *              2013      Chris Cain,
+ *              2013      Andrej Mitrovi&cacute;,
  *              2013-2014 Joseph Rushton Wakeling
  *
  * License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
  *
  * Authors: $(WEB erdani.org, Andrei Alexandrescu),
- *          Nils Boßung,
- *          Chris Cain,
+ *          Chris Cain (discrete _distribution and integral-based uniform),
+ *          Andrej Mitrovi&cacute; (enum-based uniform),
  *          $(WEB braingam.es, Joseph Rushton Wakeling)
  *
  * Source: $(HAPSRC hap/random/_distribution.d)
