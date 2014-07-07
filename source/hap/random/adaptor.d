@@ -67,19 +67,6 @@ final class Cover(Range, UniformRNG)
     Range _input;
     UniformRNG _rng;
 
-    // private constructor for use by .save
-    this(Range input, UniformRNG rng, in bool[] chosen, in size_t current, in size_t already)
-    {
-        _input = input;
-        _rng = rng;
-        _chosen.length = chosen.length;
-        _chosen[] = chosen[];
-        _current = current;
-        assert(_chosen[_current]);
-        _alreadyChosen = already;
-        assert(_alreadyChosen > 0);
-    }
-
   public:
     this(Range input, UniformRNG rng)
     {
