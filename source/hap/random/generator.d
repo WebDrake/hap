@@ -95,7 +95,11 @@ unittest
         assert(isUniformRNG!UniformRNG);
         assert(isSeedable!UniformRNG);
 
-        // Ensure that popFront() actually changes the RNG state
+        /* Ensure that popFront() actually changes the RNG state.
+         * Note that this test makes the assumption that RNGs of
+         * the same type that are initialized without being
+         * explicitly seeded will have the same internal state.
+         */
         typeof(UniformRNG.front) a, b;
         {
             auto gen = new UniformRNG;
@@ -108,6 +112,7 @@ unittest
         }
         assert(a != b);
 
+        // if a forward range, check .save works
         static if (isForwardRange!UniformRNG)
         {
             auto gen1 = new UniformRNG(unpredictableSeed);
@@ -124,6 +129,23 @@ unittest
             assert(gen2 !is gen1);
             assert(gen2.front != gen1.front);
         }
+
+        // check that allocation with 'scoped' works
+        import std.typecons : scoped;
+        {
+            auto gen = scoped!UniformRNG(unpredictableSeed);
+        }
+        {
+            auto gen = scoped!UniformRNG;
+            a = gen.front;
+        }
+        {
+            auto gen = scoped!UniformRNG;
+            assert(gen.front == a);
+            gen.popFront();
+            b = gen.front;
+        }
+        assert(a != b);
     }
 
     // Ensure different RNGs don't evaluate as equal
