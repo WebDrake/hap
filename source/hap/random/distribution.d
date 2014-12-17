@@ -1336,6 +1336,8 @@ unittest
     // General tests
     foreach (UniformRNG; UniformRNGTypes)
     {
+        import std.typetuple;
+
         foreach (T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
                                int, uint, long, ulong, float, double, real))
         {
@@ -1490,6 +1492,8 @@ unittest
 {
     foreach (UniformRNG; UniformRNGTypes)
     {
+        import std.typetuple;
+
         foreach (T; TypeTuple!(char, wchar, dchar, byte, ubyte, short, ushort,
                                int, uint, long, ulong))
         {
@@ -1680,6 +1684,8 @@ unittest
 {
     foreach (UniformRNG; UniformRNGTypes)
     {
+        import std.typetuple;
+
         foreach (T; TypeTuple!(float, double, real))
         {
             UniformRNG rng = new UniformRNG(unpredictableSeed);
@@ -1789,6 +1795,8 @@ unittest
 
     foreach (UniformRNG; UniformRNGTypes)
     {
+        import std.typetuple;
+
         foreach (T; TypeTuple!(float, double, real))
         {
             auto rng = new UniformRNG;
