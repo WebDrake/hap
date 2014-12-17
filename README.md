@@ -54,7 +54,7 @@ file:
 
 ```JSON
 "dependencies": {
-    "hap": ">=1.0.0-rc.1"
+    "hap": ">=1.0.0-rc.2"
 }
 ```
 
