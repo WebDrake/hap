@@ -959,6 +959,8 @@ alias randomShuffle = shuffle;
 
 unittest
 {
+    import std.algorithm;
+
     foreach(UniformRNG; UniformRNGTypes)
     {
         // Also tests partialShuffle indirectly.
@@ -966,9 +968,11 @@ unittest
         auto b = a.dup;
         auto gen = new UniformRNG(unpredictableSeed);
         shuffle(a, gen);
-        assert(a.sort == b);
+        sort(a);
+        assert(a == b);
         shuffle(a);
-        assert(a.sort == b);
+        sort(a);
+        assert(a == b);
     }
 }
 
@@ -1004,6 +1008,8 @@ auto partialShuffle(Range)(Range r, in size_t n)
 
 unittest
 {
+    import std.algorithm;
+
     foreach(UniformRNG; UniformRNGTypes)
     {
         auto a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -1011,9 +1017,11 @@ unittest
         auto gen = new UniformRNG(unpredictableSeed);
         partialShuffle(a, 5, gen);
         assert(a[5 .. $] == b[5 .. $]);
-        assert(a[0 .. 5].sort == b[0 .. 5]);
+        sort(a[0 .. 5]);
+        assert(a[0 .. 5] == b[0 .. 5]);
         partialShuffle(a, 6);
         assert(a[6 .. $] == b[6 .. $]);
-        assert(a[0 .. 6].sort == b[0 .. 6]);
+        sort(a[0 .. 6]);
+        assert(a[0 .. 6] == b[0 .. 6]);
     }
 }
