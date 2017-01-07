@@ -31,7 +31,7 @@
  *
  * Credits: The Mersenne Twister implementation is adapted from
  *          the C++ implementation in
- *          $(WEB Boost.Random, boost.org/doc/libs/1_63_0/doc/html/boost_random.html)
+ *          $(WEB boost.org/doc/libs/1_63_0/doc/html/boost_random.html, Boost.Random)
  *          by Jens Maurer and Steven Watanabe, similarly licensed
  *          under the Boost Software License 1.0.
  *
